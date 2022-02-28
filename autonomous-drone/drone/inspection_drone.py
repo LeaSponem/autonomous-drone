@@ -1,8 +1,9 @@
+import time
+
+import RPi.GPIO as GPIO
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
-import time
-import RPi.GPIO as GPIO
 
 
 class InspectionDrone(object):
