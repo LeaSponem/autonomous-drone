@@ -1,5 +1,7 @@
 import time
-from drone.inspection_drone import InspectionDrone
+import sys
+sys.path.insert(0, '../drone')
+from inspection_drone import InspectionDrone
 
 
 # Connection between the Raspberry and the Pixhawk

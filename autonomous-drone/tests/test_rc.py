@@ -1,4 +1,6 @@
-from drone.inspection_drone import InspectionDrone
+import sys
+sys.path.insert(0, '../drone')
+from inspection_drone import InspectionDrone
 import time
 
 guided_mode_switch = 6
