@@ -1,8 +1,9 @@
 import sys
 import time
 sys.path.insert(0, '../drone')
+sys.path.insert(0, '../sensors')
 from inspection_drone import InspectionDrone
-
+from tf_mini import tfmini_distance
 
 drone = InspectionDrone('/dev/serial0',
                         baudrate=115200,
@@ -11,13 +12,18 @@ drone = InspectionDrone('/dev/serial0',
                         buzzer_pin=23, critical_distance_lidar=300)
 
 total_test_time = 30
+switch_obstacle = 9
+critical_distance = 300
 drone.launch_mission()
+obstacle_detected = False
 
 while drone.mission_running():
     drone.update_time()
-    if drone.time_since_mission_launch() > total_test_time:
-        drone.abort_mission()
-    drone.update_detection(use_lidar=True, debug=False)
-    if drone.obstacle_detected():
-        print("Obstacle")
-    time.sleep(0.01)
+    drone.update_switch_states()
+    if critical_distance > tfmini_distance(0x10) > 0 and not obstacle_detected:
+        drone.set_guided_mode()
+        print("Obstacle detected")
+        obstacle_detected = True
+    if tfmini_distance(0x10) > critical_distance and tfmini_distance(0x10) > 0 and obstacle_detected:
+        obstacle_detected = False
+    time.sleep(0.1)
