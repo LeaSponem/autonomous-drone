@@ -5,11 +5,11 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
 sys.path.insert(0, '../sensors')
-from range_sensors import Lidar, read_sensors_line
+from tf_mini import TFMiniPlus
 
 
 class InspectionDrone(object):
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None, critical_distance_lidar=30):
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None, lidar_address=None, critical_distance_lidar=30):
         """
         :rtype: object
         """
@@ -70,7 +70,7 @@ class InspectionDrone(object):
         self._elapsed_time_connexion = time.time() - self._start_time
         self._elapsed_time_mission = 0
         self._mission_running = False
-        self._lidar = Lidar(critical_distance_lidar)
+        self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
 
     def __del__(self):
         GPIO.output(self._buzzerPin, GPIO.LOW)
@@ -95,10 +95,8 @@ class InspectionDrone(object):
                     self.switches[int(key)].set_state("up")
 
     def update_detection(self, use_lidar=True, debug=False):
-
-        read_serial = read_sensors_line()
-        if self._lidar.read_distance(read_serial) and debug:
-            print "Lidar range:" + str(self._lidar.get_distance())
+        if self._lidar.read_distance() and debug:
+            print("Lidar range:" + str(self._lidar.get_distance()))
         if use_lidar and self._lidar.critical_distance_reached():
             if self.obstacle_detected():
                 self._time_last_obstacle_detected = time.time()
