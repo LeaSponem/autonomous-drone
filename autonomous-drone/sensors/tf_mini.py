@@ -22,15 +22,8 @@ class TFMiniPlus(RangeSensor):
 			bus.i2c_rdwr(write, read)
 			data = list(read)
 		if data[1] == 89 and data[2] == 89:
-			strength = data[3] + data[4] * 256
-			#if 100 <= strength <= 65536:
-			self.set_distance(int(data[3]) + int(data[4]) * 256)
-			return True
+			strength = data[5] + data[6] * 256
+			if 100 <= strength <= 65536:
+				self.set_distance(data[3] + data[4] * 256)
+				return True
 		return False
-
-
-# lidar = TFMiniPlus(0x10, 400)
-# for _ in range(500):
-# 	lidar.read_distance()
-# 	print(lidar.get_distance())
-# 	time.sleep(0.01)
