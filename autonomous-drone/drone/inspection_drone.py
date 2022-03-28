@@ -135,7 +135,22 @@ class InspectionDrone(object):
             velocity_x, velocity_y, velocity_z,  # x, y, z velocity in m/s
             0, 0, 0,  # x, y, z acceleration (not supported yet, ignored in GCS_Mavlink)
             0, 0)  # yaw, yaw_rate (not supported yet, ignored in GCS_Mavlink)
+        self.vehicle.send_mavlink(msg)
 
+    def _send_condition_yaw_command(self, angle, direction):
+        """
+        Set the vehicle yaw to a specified value in degrees
+        The yaw is set relatively to the actual yaw value
+        """
+        msg = self.vehicle.message_factory.command_long_encode(
+            0, 0,  # target system, target component
+            mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+            0,  # confirmation
+            angle,  # yaw in degrees
+            0,  # yaw speed deg/s
+            direction,  # direction -1 ccw, 1 cw
+            1,  # 1 for relative yaw value
+            0, 0, 0)
         self.vehicle.send_mavlink(msg)
 
     def send_mavlink_go_forward(self, velocity):
@@ -159,17 +174,10 @@ class InspectionDrone(object):
         self._send_ned_velocity(0, 0, 0)
 
     def right_rotate(self, angle):
-        msg = self.vehicle.message_factory.command_long_encode(
-            0, 0,  # target system, target component
-            mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
-            0,  # confirmation
-            angle,  # param 1, yaw in degrees
-            0,  # param 2, yaw speed deg/s
-            1,  # param 3, direction -1 ccw, 1 cw
-            1,  # param 4, relative offset 1, absolute angle 0
-            0, 0, 0)
-        # send command to vehicle
-        self.vehicle.send_mavlink(msg)
+        self._send_condition_yaw_command(angle, 1)
+
+    def left_rotate(self, angle):
+        self._send_condition_yaw_command(angle, -1)
 
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
