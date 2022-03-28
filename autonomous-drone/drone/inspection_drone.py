@@ -158,6 +158,19 @@ class InspectionDrone(object):
         print("Stopping")
         self._send_ned_velocity(0, 0, 0)
 
+    def right_rotate(self, angle):
+        msg = self.vehicle.message_factory.command_long_encode(
+            0, 0,  # target system, target component
+            mavutil.mavlink.MAV_CMD_CONDITION_YAW,  # command
+            0,  # confirmation
+            angle,  # param 1, yaw in degrees
+            0,  # param 2, yaw speed deg/s
+            1,  # param 3, direction -1 ccw, 1 cw
+            1,  # param 4, relative offset 1, absolute angle 0
+            0, 0, 0)
+        # send command to vehicle
+        self.vehicle.send_mavlink(msg)
+
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
 
