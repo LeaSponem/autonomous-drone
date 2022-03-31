@@ -70,6 +70,7 @@ class InspectionDrone(object):
         self._elapsed_time_connexion = time.time() - self._start_time
         self._elapsed_time_mission = 0
         self._mission_running = False
+        self._last_flight_mode = self.vehicle.mode
         self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
 
     def __del__(self):
@@ -110,6 +111,9 @@ class InspectionDrone(object):
         else:
             return time.time() - self._time_last_obstacle_detected
 
+    def do_lidar_reading(self):
+        return self._lidar.lidar_reading()
+
     def obstacle_detected(self):
         return self._obstacle_detected
 
@@ -129,7 +133,7 @@ class InspectionDrone(object):
         msg = self.vehicle.message_factory.set_position_target_local_ned_encode(
             0,  # time_boot_ms (not used)
             0, 0,  # target system, target component
-            mavutil.mavlink.MAV_FRAME_LOCAL_NED,  # frame
+            mavutil.mavlink.MAV_FRAME_BODY_OFFSET_NED,  # frame
             0b0000111111000111,  # type_mask (only speeds enabled)
             0, 0, 0,  # x, y, z positions (not used)
             velocity_x, velocity_y, velocity_z,  # x, y, z velocity in m/s
@@ -169,14 +173,19 @@ class InspectionDrone(object):
         print("Going backward")
         self._send_ned_velocity(-velocity, 0, 0)
 
+    def send_mavlink_go_in_plane(self, velocity_x, velocity_y):
+        self._send_ned_velocity(velocity_x, velocity_y, 0)
+
     def send_mavlink_stay_stationary(self):
         print("Stopping")
         self._send_ned_velocity(0, 0, 0)
 
     def right_rotate(self, angle):
+        print("Right rotation")
         self._send_condition_yaw_command(angle, 1)
 
     def left_rotate(self, angle):
+        print("Left rotation")
         self._send_condition_yaw_command(angle, -1)
 
     def is_in_auto_mode(self):
@@ -190,6 +199,12 @@ class InspectionDrone(object):
 
     def set_guided_mode(self):
         self.vehicle.mode = VehicleMode("GUIDED")
+
+    def get_last_flight_mode(self):
+        return self._last_flight_mode
+
+    def update_last_flight_mode(self):
+        self._last_flight_mode = self.vehicle.mode
 
     def mission_running(self):
         return self._mission_running
