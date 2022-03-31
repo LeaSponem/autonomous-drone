@@ -18,13 +18,13 @@ class RangeSensor:
         # log : stores range values for visualization
         self.time_log = []
         # time_log : stores the time the range was stored in the log (in ms)
-        self.startTime = time.time()  # startTime : stores the time at which the object was created (in ms)
+        self.start_time = time.time()  # startTime : stores the time at which the object was created (in ms)
 
     def critical_distance_reached(self):
         """ Checks if the range is inferior to the critical distance of the sensor
         Returns True if that's the case, False otherwise"""
 
-        if self.range < self.critical_distance:
+        if 0 < self.range < self.critical_distance:
             return True
         return False
 
@@ -37,4 +37,7 @@ class RangeSensor:
         In the meantime, it stores this value and the time it was written in a list"""
         self.range = distance_value
         self.log.append(distance_value)
-        self.time_log.append(time.time() - self.startTime)
+        self.time_log.append(time.time() - self.start_time)
+
+    def time_since_last_reading(self):
+        return time.time()-self.time_log[-1]
