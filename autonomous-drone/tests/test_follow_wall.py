@@ -21,7 +21,7 @@ switch_obstacle = 9
 drone.launch_mission()
 obstacle_detected = False
 
-target_distance = 300     #Distance that must be kept between the drone and the wall
+target_distance = 400     #Distance that must be kept between the drone and the wall
 K = 1                   #Coefficient entre l'erreur de distance et la vitesse selon x
 
 while drone.mission_running():
