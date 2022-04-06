@@ -1,15 +1,18 @@
 import time
 import sys
+import numpy as np
 import RPi.GPIO as GPIO
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
+
 sys.path.insert(0, '../sensors')
 from tf_mini import TFMiniPlus
 
 
 class InspectionDrone(object):
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None, lidar_address=None, critical_distance_lidar=30):
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None,
+                 lidar_address=None, critical_distance_lidar=30):
         """
         :rtype: object
         """
@@ -72,6 +75,7 @@ class InspectionDrone(object):
         self._mission_running = False
         self._last_flight_mode = self.vehicle.mode
         self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
+        self._rotation_angle = 0
 
     def __del__(self):
         GPIO.output(self._buzzerPin, GPIO.LOW)
@@ -180,13 +184,29 @@ class InspectionDrone(object):
         print("Stopping")
         self._send_ned_velocity(0, 0, 0)
 
-    def right_rotate(self, angle):
-        print("Right rotation")
-        self._send_condition_yaw_command(angle, 1)
+    def send_mavlink_right_rotate(self, angle):
+        if self._rotation_angle > 0:
+            print("Drone already rotating")
+        else:
+            print("Right rotation")
+            self._rotation_angle = angle
+            self._send_condition_yaw_command(angle, 1)
 
-    def left_rotate(self, angle):
-        print("Left rotation")
-        self._send_condition_yaw_command(angle, -1)
+    def send_mavlink_left_rotate(self, angle):
+        if self._rotation_angle > 0:
+            print("Drone already rotating")
+        else:
+            print("Left rotation")
+            self._rotation_angle = angle
+            self._send_condition_yaw_command(angle, -1)
+
+    def check_rotation(self, threshold):
+        if self._rotation_angle == 0:
+            return True
+        elif ((180 / np.pi) * self.vehicle.attitude.yaw - self._rotation_angle) < threshold:
+            self._rotation_angle = 0
+            return True
+        return False
 
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
