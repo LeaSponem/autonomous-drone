@@ -5,6 +5,7 @@
 """
 import sys
 import time
+import numpy as np
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../sensors')
 from inspection_drone import InspectionDrone
@@ -39,9 +40,10 @@ while drone.mission_running():
         obstacle_detected = False
         print("No obstacle")
 
-    #Mode suivi de mur
+    #Following a wall mode
     if obstacle_detected is True:
-        Vx = K*(target_distance - drone._lidar.get_distance())
-        Vy = 0.5    #Le drone se decale sur sa droite à 0.5 m/s
+        Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
+        Vx = np.min(np.abs(Vx), 0.5)*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
+        Vy = 0.5                                                    #Lateral speed is 0.5 m/s
         drone._send_ned_velocity(Vx, Vy, 0)
     time.sleep(0.1)
