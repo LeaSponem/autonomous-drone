@@ -39,7 +39,7 @@ while drone.mission_running():
     if not drone.obstacle_detected() and drone._lidar.get_distance()>0 and obstacle_detected:
         obstacle_detected = False
         print("No obstacle")
-
+#Test
     #Following a wall mode
     if obstacle_detected is True:
         Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
