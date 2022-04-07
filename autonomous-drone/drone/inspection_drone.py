@@ -230,6 +230,12 @@ class InspectionDrone(object):
         self._relative_x = self._relative_x + velocity*dt*np.cos(angle)
         self._relative_y = self._relative_y + velocity*dt*np.sin(angle)
 
+    def is_armable(self):
+        return self.vehicle.is_armable
+
+    def arm(self):
+        self.vehicle.armed
+
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
 
