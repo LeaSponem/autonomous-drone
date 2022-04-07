@@ -8,11 +8,14 @@ from rc_switch import Switch
 
 sys.path.insert(0, '../sensors')
 from tf_mini import TFMiniPlus
+from virtual_tf_mini import VirtualTFMiniPlus
+
+DEFAULT_TIME_BETWEEN_COMMANDS = 0.5
 
 
 class InspectionDrone(object):
     def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None,
-                 lidar_address=None, critical_distance_lidar=30):
+                 lidar_address=None, critical_distance_lidar=30, simulation=False):
         """
         :rtype: object
         """
@@ -74,8 +77,15 @@ class InspectionDrone(object):
         self._elapsed_time_mission = 0
         self._mission_running = False
         self._last_flight_mode = self.vehicle.mode
-        self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
         self._rotation_angle = 0
+        self._absolute_yaw = 0
+        self._relative_x = 0
+        self._relative_y = 0
+
+        if not simulation:
+            self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
+        else:
+            self._lidar = VirtualTFMiniPlus(critical_distance_lidar)
 
     def __del__(self):
         GPIO.output(self._buzzerPin, GPIO.LOW)
@@ -162,22 +172,29 @@ class InspectionDrone(object):
         self.vehicle.send_mavlink(msg)
 
     def send_mavlink_go_forward(self, velocity):
+        self.update_relative_position(velocity, self._absolute_yaw, dt=DEFAULT_TIME_BETWEEN_COMMANDS)
         print("Going forward")
         self._send_ned_velocity(velocity, 0, 0)
 
     def send_mavlink_go_left(self, velocity):
+        self.update_relative_position(velocity, np.pi-self._absolute_yaw, dt=DEFAULT_TIME_BETWEEN_COMMANDS)
         print("Going left")
         self._send_ned_velocity(0, -velocity, 0)
 
     def send_mavlink_go_right(self, velocity):
+        self.update_relative_position(velocity, -self._absolute_yaw, dt=DEFAULT_TIME_BETWEEN_COMMANDS)
         print("Going right")
         self._send_ned_velocity(0, velocity, 0)
 
     def send_mavlink_go_backward(self, velocity):
+        self.update_relative_position(-velocity, self._absolute_yaw, dt=DEFAULT_TIME_BETWEEN_COMMANDS)
         print("Going backward")
         self._send_ned_velocity(-velocity, 0, 0)
 
     def send_mavlink_go_in_plane(self, velocity_x, velocity_y):
+        velocity = np.sqrt(velocity_y**2+velocity_y**2)
+        angle = np.arctan(velocity_y/velocity_x) + self._absolute_yaw
+        self.update_relative_position(velocity, angle, dt=DEFAULT_TIME_BETWEEN_COMMANDS)
         self._send_ned_velocity(velocity_x, velocity_y, 0)
 
     def send_mavlink_stay_stationary(self):
@@ -203,10 +220,15 @@ class InspectionDrone(object):
     def check_rotation(self, threshold):
         if self._rotation_angle == 0:
             return True
-        elif ((180 / np.pi) * self.vehicle.attitude.yaw - self._rotation_angle) < threshold:
+        elif ((180 / np.pi) * self.vehicle.attitude.yaw - self._absolute_yaw - self._rotation_angle) < threshold:
+            self._absolute_yaw = self._absolute_yaw + self._rotation_angle
             self._rotation_angle = 0
             return True
         return False
+
+    def update_relative_position(self, velocity, angle, dt=DEFAULT_TIME_BETWEEN_COMMANDS):
+        self._relative_x = self._relative_x + velocity*dt*np.cos(angle)
+        self._relative_y = self._relative_y + velocity*dt*np.sin(angle)
 
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
