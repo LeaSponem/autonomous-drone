@@ -38,6 +38,6 @@ class RangeSensor:
         self.range = distance_value
         self.log.append(distance_value)
         self.time_log.append(time.time() - self.start_time)
+        
 
-    def time_since_last_reading(self):
-        return time.time()-self.time_log[-1]
+

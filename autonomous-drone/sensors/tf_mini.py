@@ -1,5 +1,6 @@
 import smbus2
 from range_sensors import RangeSensor
+import time
 
 DEFAULT_CRITICAL_DISTANCE = 50
 
@@ -30,6 +31,10 @@ class TFMiniPlus(RangeSensor):
                 self.set_distance(data[3] + data[4] * 256)
                 return True
         return False
-
+        
     def lidar_reading(self):
-        return self.time_since_last_reading() > self._time_between_readings
+        while True:
+            if(time.time()-self.start_time-self.time_log[-1] > self._time_between_readings):
+                return True
+            else:
+                time.sleep(0.005)
