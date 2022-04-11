@@ -1,3 +1,5 @@
+import sys
+sys.path.insert(0, '../sensors')
 from tf_mini import TFMiniPlus
 import time
 
