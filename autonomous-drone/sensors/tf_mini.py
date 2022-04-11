@@ -33,8 +33,4 @@ class TFMiniPlus(RangeSensor):
         return False
         
     def lidar_reading(self):
-        while True:
-            if(time.time()-self.start_time-self.time_log[-1] > self._time_between_readings):
-                return True
-            else:
-                time.sleep(0.005)
+        return self.time_since_last_reading() > self._time_between_readings
