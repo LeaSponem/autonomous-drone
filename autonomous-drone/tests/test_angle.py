@@ -3,7 +3,7 @@ import numpy as np
 sys.path.insert(0, '../sensors')
 from tf_mini import TFMiniPlus
 import time
-def caculer_angle(L,x1,x2):
+def compute_angle(L,x1,x2):
     angle=np.actan((x1-x2)/L)
     return angle*180/3.14
 
@@ -20,7 +20,7 @@ for i in range(20000):
     if mini2.lidar_reading():
         mini2.read_distance()
         distance2=mini2.get_distance()
-    print(distance,distance2,caculer_angle(15,distance,distance2))
+    print(distance,distance2,compute_angle(15,distance,distance2))
 # print(mini.time_log[-1] )
 # print(mini.log)
 # print(mini.time_log)
