@@ -17,7 +17,7 @@ class RangeSensor:
         # time_log : stores the time the range was stored in the log (in ms)
         self.start_time = time.time()  # startTime : stores the time at which the object was created (in ms)
         # log : stores range values for visualization
-        self.time_log = [self.start_time]
+        self.time_log = [time.time() - self.start_time]
         self.log = [0]
 
     def critical_distance_reached(self):
