@@ -1,8 +1,10 @@
+import time
+
 from range_sensors import RangeSensor
 import numpy as np
 
-DEFAULT_CRITICAL_DISTANCE = 50
-DEFAULT_DISTANCE_DETECTION = 500
+DEFAULT_CRITICAL_DISTANCE = 1
+DEFAULT_DISTANCE_DETECTION = 5
 
 
 class VirtualTFMiniPlus(RangeSensor):
@@ -22,7 +24,7 @@ class VirtualTFMiniPlus(RangeSensor):
             x_f, y_f = wall.get_obstacle_position()
             if x_0 < x_drone < x_f:
                 if np.abs(wall.obstacle_equation(x_drone)-y_drone) < self._distance_detection:
-                    self.set_distance(np.abs(wall.obstacle_equation(x_drone)-y_drone))
+                    self.set_distance(0.01*(np.abs(wall.obstacle_equation(x_drone)-y_drone)))
                     return True
         return False
 
