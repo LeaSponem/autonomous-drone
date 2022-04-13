@@ -1,4 +1,5 @@
 import numpy as np
+import time
 
 
 class FrameConverter:
@@ -19,7 +20,7 @@ class FrameConverter:
         latitude_conversion_coef, longitude_conversion_coef = self.get_geo_to_mm_coef()
         return delta_lat * latitude_conversion_coef, delta_long * longitude_conversion_coef
 
-    def convert_metric_to_global(self, deltaNorth, deltaEast):
+    def convert_metric_to_global(self, delta_north, delta_east):
         """
         Converts a distance measured in millimeters along the North and East directions into latitude and longitude distances.
         This conversion depends on which latitude the drone is located
@@ -31,7 +32,7 @@ class FrameConverter:
         Outputs: returns the converted distances in latitude and longitude in degrees
         """
         latitude_to_mm_coef, longitude_to_mm_coef = self.get_geo_to_mm_coef()
-        return deltaNorth / latitude_to_mm_coef, deltaEast / longitude_to_mm_coef
+        return delta_north / latitude_to_mm_coef, delta_east / longitude_to_mm_coef
 
     def get_geo_to_mm_coef(self):
         # reference latitude converted in radians
@@ -50,3 +51,34 @@ class FrameConverter:
 
     def rad_to_deg(self, radians):
         return int(radians * 180 / np.pi)
+
+
+class SimulationPosition:
+    def __init__(self, ref_lat, ref_long, angle_north_x_axes):
+        self._time_last_update_position = time.time()
+        self._ref_lat = ref_lat
+        self._ref_long = ref_long
+        self._angle_north_x_axes = angle_north_x_axes
+        self._newPosition = False
+        self._frame_converter = FrameConverter(self._ref_lat)
+
+    def get_position(self, drone_location):
+        """
+        For testing purposes only : recreates a X,Y position relative to a point on the map to simulate a local
+        positioning system
+        """
+
+        delta_lat = drone_location.lat - self._ref_lat
+        delta_long = drone_location.long - self._ref_long
+        x_north, y_east = self._frame_converter.convert_global_to_metric(delta_lat, delta_long)
+        x = x_north * np.cos(self._angle_north_x_axes * np.pi / 180) + y_east * np.sin(self._angle_north_x_axes * np.pi / 180)
+        y = x_north * np.sin(self._angle_north_x_axes * np.pi / 180) - y_east * np.cos(self._angle_north_x_axes * np.pi / 180)
+
+        return int(x), int(y)
+
+    def update_position(self):
+        if time.time() - self._time_last_update_position > 100:
+            self._time_last_update_position = time.time()
+            return True
+        else:
+            return False
