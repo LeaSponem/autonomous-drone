@@ -1,7 +1,6 @@
 import time
 import sys
 import numpy as np
-import RPi.GPIO as GPIO
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
@@ -10,20 +9,11 @@ from tf_mini import TFMiniPlus
 
 
 class InspectionDrone(object):
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None,
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
                  lidar_address=None, critical_distance_lidar=30):
         """
         :rtype: object
         """
-        # Initialize buzzer, making sure it is down
-        if buzzer_pin is None:
-            self._buzzerPin = 23
-        else:
-            self._buzzerPin = buzzer_pin
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self._buzzerPin, GPIO.OUT)
-        GPIO.output(self._buzzerPin, GPIO.LOW)
-
         try:
             print("Trying to connect to the drone")
             self.vehicle = connect(connection_string, baudrate, wait_ready=True)
@@ -76,9 +66,6 @@ class InspectionDrone(object):
         self._rotation_angle = 0
         self._absolute_yaw = np.pi/2
         self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
-
-    def __del__(self):
-        GPIO.output(self._buzzerPin, GPIO.LOW)
 
     # Will update the switch. We enumerate every value in the vehicle.channels dictionary, and set switch mode
     # according to the mapping
@@ -243,17 +230,8 @@ class InspectionDrone(object):
     def abort_mission(self):
         self._mission_running = False
 
-    def buzz(self, freq=1):
-        if int(time.time() * freq) % 2 == 0:
-            GPIO.output(self._buzzerPin, GPIO.HIGH)
-        if int(time.time() * freq) % 2 == 1:
-            GPIO.output(self._buzzerPin, GPIO.LOW)
-
     def time_since_mission_launch(self):
         return self._elapsed_time_mission
-
-    def stop_buzz(self):
-        GPIO.output(self._buzzerPin, GPIO.LOW)
 
     def set_flight_mode(self, flightmode):
         self.vehicle.mode = flightmode
