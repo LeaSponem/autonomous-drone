@@ -69,7 +69,7 @@ class SimulationPosition:
         """
 
         delta_lat = drone_location.lat - self._ref_lat
-        delta_long = drone_location.long - self._ref_long
+        delta_long = drone_location.lon - self._ref_long
         x_north, y_east = self._frame_converter.convert_global_to_metric(delta_lat, delta_long)
         x = x_north * np.cos(self._angle_north_x_axes * np.pi / 180) + y_east * np.sin(self._angle_north_x_axes * np.pi / 180)
         y = x_north * np.sin(self._angle_north_x_axes * np.pi / 180) - y_east * np.cos(self._angle_north_x_axes * np.pi / 180)
