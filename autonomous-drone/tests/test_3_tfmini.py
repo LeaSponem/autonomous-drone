@@ -14,7 +14,7 @@ time.sleep(0.05)
 mini3.read_distance()
 time.sleep(0.05)
 
-for i in range(20000):
+for i in range(200000):
     if mini1.lidar_reading():
         mini1.read_distance()
         distance1 = mini1.get_distance()
@@ -28,4 +28,4 @@ for i in range(20000):
     time.sleep(0.1)
 #print(mini1.time_log[-1] )
 #print(mini1.log)
-# print(mini.time_log)
+#print(mini1.time_log)
