@@ -12,13 +12,11 @@ class RangeSensor:
 
     def __init__(self, _critical_distance=DEFAULT_CRITICAL_DISTANCE):
         self.name = "Range sensor"
-        self.range = 999
+        self.range = 999    #range : last distance read by sensor
         self.critical_distance = _critical_distance
-        # time_log : stores the time the range was stored in the log (in ms)
         self.start_time = time.time()  # startTime : stores the time at which the object was created (in ms)
-        # log : stores range values for visualization
-        self.time_log = [time.time() - self.start_time]
-        self.log = [0]
+        self.time_log = [time.time() - self.start_time] # time_log : stores the time the range was stored in the log (in ms)
+        self.log = [0]  # log : stores range values for visualization
 
     def critical_distance_reached(self):
         """ Checks if the range is inferior to the critical distance of the sensor
