@@ -5,12 +5,12 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
 sys.path.insert(0, '../sensors')
-from tf_mini import TFMiniPlus
+from virtual_tf_mini import VirtualTFMiniPlus
 
 
 class InspectionDrone(object):
     def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
-                 lidar_address=None, critical_distance_lidar=30):
+                 lidar_address=None, critical_distance_lidar=1):
         """
         :rtype: object
         """
@@ -65,7 +65,7 @@ class InspectionDrone(object):
         self._last_flight_mode = self.vehicle.mode
         self._rotation_angle = 0
         self._absolute_yaw = np.pi/2
-        self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
+        self._lidar = VirtualTFMiniPlus(critical_distance_lidar)
 
     # Will update the switch. We enumerate every value in the vehicle.channels dictionary, and set switch mode
     # according to the mapping
@@ -86,8 +86,8 @@ class InspectionDrone(object):
                 if 1800 < value:
                     self.switches[int(key)].set_state("up")
 
-    def update_detection(self, use_lidar=True, debug=False):
-        if self._lidar.read_distance() and debug:
+    def update_detection(self, use_lidar=True, debug=False, x_drone=0, y_drone=0, walls=None):
+        if self._lidar.read_distance(x_drone, y_drone, walls) and debug:
             print("Lidar range:" + str(self._lidar.get_distance()))
         if use_lidar and self._lidar.critical_distance_reached():
             if self.obstacle_detected():
@@ -149,7 +149,7 @@ class InspectionDrone(object):
         self.vehicle.send_mavlink(msg)
 
     def send_mavlink_go_forward(self, velocity):
-        print("Going forward")
+        #print("Going forward")
         self._send_ned_velocity(velocity, 0, 0)
 
     def send_mavlink_go_left(self, velocity):
