@@ -29,21 +29,32 @@ while drone.mission_running():
     #Updating everything
     drone.update_time()
     drone.update_switch_states()
-    drone.update_detection(use_lidar=True, debug=False)
+    drone.update_detection(use_lidar=True, debug=True)
 
     #Testing if there is an obstacle
-    if drone.obstacle_detected() and drone._lidar.get_distance()>0 and not obstacle_detected:
+    if drone.obstacle_detected() and not obstacle_detected:
         drone.set_guided_mode()
         print("Obstacle detected")
         obstacle_detected = True
-    if not drone.obstacle_detected() and drone._lidar.get_distance()>0 and obstacle_detected:
+    if not drone.obstacle_detected() and obstacle_detected:
         obstacle_detected = False
         print("No obstacle")
-#Test
-    #Following a wall mode
+
+    #Following a wall mode IRL
+    """
     if obstacle_detected is True:
         Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
         Vx = np.min(np.abs(Vx), 0.5)*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
+        Vy = 0.5                                                    #Lateral speed is 0.5 m/s
+        drone._send_ned_velocity(Vx, Vy, 0)
+    time.sleep(0.1)
+    """
+
+    # Following a wall mode in Simulator
+    if obstacle_detected is True:
+        print("following")
+        Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
+        Vx = np.min([np.abs(Vx), 0.5])*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
         Vy = 0.5                                                    #Lateral speed is 0.5 m/s
         drone._send_ned_velocity(Vx, Vy, 0)
     time.sleep(0.1)
