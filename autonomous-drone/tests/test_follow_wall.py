@@ -25,6 +25,8 @@ obstacle_detected = False
 target_distance = 400     #Distance that must be kept between the drone and the wall
 K = 1                   #Coefficient entre l'erreur de distance et la vitesse selon x
 
+x = 0   #Increment for Simulator use only
+
 while drone.mission_running():
     #Updating everything
     drone.update_time()
@@ -41,19 +43,16 @@ while drone.mission_running():
         print("No obstacle")
 
     #Following a wall mode IRL
-    """
-    if obstacle_detected is True:
-        Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
-        Vx = np.min(np.abs(Vx), 0.5)*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
-        Vy = 0.5                                                    #Lateral speed is 0.5 m/s
-        drone._send_ned_velocity(Vx, Vy, 0)
-    time.sleep(0.1)
-    """
+    #measured_distance = drone.get_distance()
 
     # Following a wall mode in Simulator
+    x+=1
+    measured_distance = target_distance + 20 * np.sin(x)
+
+    #Following a wall
     if obstacle_detected is True:
         print("following")
-        Vx = K*(target_distance - drone.get_distance())      #Forward speed proportionnal to the distance with the wall
+        Vx = K*(target_distance - measured_distance)      #Forward speed proportionnal to the distance with the wall
         Vx = np.min([np.abs(Vx), 0.5])*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
         Vy = 0.5                                                    #Lateral speed is 0.5 m/s
         drone._send_ned_velocity(Vx, Vy, 0)
