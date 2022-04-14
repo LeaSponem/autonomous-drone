@@ -53,7 +53,7 @@ while drone.mission_running():
     # Following a wall mode in Simulator
     if obstacle_detected is True:
         print("following")
-        Vx = K*(target_distance - drone._lidar.get_distance())      #Forward speed proportionnal to the distance with the wall
+        Vx = K*(target_distance - drone.get_distance())      #Forward speed proportionnal to the distance with the wall
         Vx = np.min([np.abs(Vx), 0.5])*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
         Vy = 0.5                                                    #Lateral speed is 0.5 m/s
         drone._send_ned_velocity(Vx, Vy, 0)

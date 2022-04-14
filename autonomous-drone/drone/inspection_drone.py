@@ -257,3 +257,6 @@ class InspectionDrone(object):
 
     def set_flight_mode(self, flightmode):
         self.vehicle.mode = flightmode
+
+    def get_distance(self):
+        return self._lidar.get_distance()
