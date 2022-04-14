@@ -15,15 +15,13 @@ class VirtualTFMiniPlus(RangeSensor):
         self._time_between_readings = 0.02  # ask a reading every 20 ms
         self._distance_detection = distance_detection
 
-    def read_distance(self, x_drone=0, y_drone=0, walls=None):
+    def read_distance(self, x_drone=0, y_drone=0, angle_drone=0, walls=None):
         """Read the distance return by the TFMiniPlus"""
         for wall in walls:
-            x_0, y_0 = wall.get_obstacle_origin()
-            x_f, y_f = wall.get_obstacle_position()
-            if x_0 < x_drone < x_f:
-                if np.abs(wall.obstacle_equation(x_drone)-y_drone) < self._distance_detection:
-                    self.set_distance((np.abs(wall.obstacle_equation(x_drone)-y_drone)))
-                    return True
+            x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
+            if np.sqrt((x_i - x_drone)**2 + (y_i - y_drone)**2) < self._distance_detection:
+                self.set_distance(np.sqrt((x_i - x_drone)**2 + (y_i - y_drone)**2))
+                return True
         return False
 
     def lidar_reading(self):
