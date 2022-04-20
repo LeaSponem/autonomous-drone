@@ -20,7 +20,8 @@ class VirtualDrone(InspectionDrone):
         self._lidar = VirtualTFMiniPlus(critical_distance_lidar)
 
     def _init_local_frame(self):
-        local_frame = SimulationPosition(self._location.lat, self._location.lon, (180 / np.pi) * (np.pi / 2 + self._yaw))
+        local_frame = SimulationPosition(self._location.lat, self._location.lon,
+                                         (180 / np.pi) * (np.pi / 2 + self._yaw))
         return local_frame
 
     def _update_location(self):
@@ -31,7 +32,9 @@ class VirtualDrone(InspectionDrone):
 
     def _update_virtual_position(self):
         self._update_location()
-        self._drone_x, self._drone_y = 0.001*self._local_frame.get_position(self._location)
+        self._drone_x, self._drone_y = self._local_frame.get_position(self._location)
+        self._drone_x *= 0.001
+        self._drone_y *= 0.001
 
     def get_angle(self):
         """Return the angle between the drone direction and the X axis"""
@@ -52,3 +55,21 @@ class VirtualDrone(InspectionDrone):
             self._obstacle_detected = True
         else:
             self._obstacle_detected = False
+
+    def arm_and_takeoff(self, tgt_altitude):
+        print("Arming motors")
+        while not self.vehicle.is_armable:
+            time.sleep(1)
+        self.set_guided_mode()
+        self.vehicle.armed = True
+        while not self.vehicle.armed:
+            print("Waiting for arming")
+            time.sleep(1)
+        print("Takeoff")
+        self.vehicle.simple_takeoff(tgt_altitude)
+        while True:
+            altitude = self.vehicle.location.global_relative_frame.alt
+            if altitude >= tgt_altitude - 1:
+                print("Altitude reached")
+                break
+            time.sleep(1)
