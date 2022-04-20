@@ -5,7 +5,7 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
 sys.path.insert(0, '../sensors')
-from virtual_tf_mini import VirtualTFMiniPlus
+from tf_mini import TFMiniPlus
 
 
 class InspectionDrone(object):
@@ -65,7 +65,7 @@ class InspectionDrone(object):
         self._last_flight_mode = self.vehicle.mode
         self._rotation_angle = 0
         self._absolute_yaw = np.pi/2
-        self._lidar = VirtualTFMiniPlus(critical_distance_lidar)
+        self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
 
     # Will update the switch. We enumerate every value in the vehicle.channels dictionary, and set switch mode
     # according to the mapping
@@ -86,8 +86,8 @@ class InspectionDrone(object):
                 if 1800 < value:
                     self.switches[int(key)].set_state("up")
 
-    def update_detection(self, use_lidar=True, debug=False, x_drone=0, y_drone=0, walls=None):
-        if self._lidar.read_distance(x_drone, y_drone, walls) and debug:
+    def update_detection(self, use_lidar=True, debug=False):
+        if self._lidar.read_distance() and debug:
             print("Lidar range:" + str(self._lidar.get_distance()))
         if use_lidar and self._lidar.critical_distance_reached():
             if self.obstacle_detected():
@@ -195,12 +195,6 @@ class InspectionDrone(object):
             self._rotation_angle = 0
             return True
         return False
-
-    def is_armable(self):
-        return self.vehicle.is_armable
-
-    def arm(self):
-        self.vehicle.armed
 
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
