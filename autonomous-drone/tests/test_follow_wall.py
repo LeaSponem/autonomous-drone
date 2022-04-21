@@ -6,16 +6,46 @@
 import sys
 import time
 import numpy as np
+import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../sensors')
 from inspection_drone import InspectionDrone
+from dronekit import VehicleMode, LocationGlobalRelative
+
+parser = argparse.ArgumentParser(description='commands')
+parser.add_argument('--connect')
+args = parser.parse_args()
+
+connection_string = args.connect
 
 
-drone = InspectionDrone('/dev/serial0',
+drone = InspectionDrone(connection_string,
                         baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                         buzzer_pin=23, lidar_address=0x10, critical_distance_lidar=300)
+
+def arm_and_takeoff(vehicle, tgt_altitude):
+    print("Arming motors")
+    while not vehicle.is_armable:
+        time.sleep(1)
+    vehicle.mode = VehicleMode("GUIDED")
+    vehicle.armed = True
+    while not vehicle.armed:
+        print("Waiting for arming")
+        time.sleep(1)
+    print("Takeoff")
+    vehicle.simple_takeoff(tgt_altitude)
+    while True:
+        altitude = vehicle.location.global_relative_frame.alt
+        if altitude >= tgt_altitude -1:
+            print("Altitude reached")
+            break
+        time.sleep(1)
+
+arm_and_takeoff(drone.vehicle, 2)
+first_detection = True
+drone.launch_mission()
 
 total_test_time = 30
 switch_obstacle = 9
@@ -47,6 +77,8 @@ while drone.mission_running():
 
     # Following a wall mode in Simulator
     x+=1
+    if x == 50 :
+        obstacle_detected = True
     measured_distance = target_distance + 20 * np.sin(x)
 
     #Following a wall
