@@ -31,12 +31,16 @@ class VirtualTFMiniPlus(RangeSensor):
         - x_drone, y_drone: virtual drone coordinates
         - angle_drone: angle between the lidar direction and the X axis
         - walls: list of wall obstacles
+        Return the min distance from an obstacle if the distance is within the sensor range
         """
+        distance = self._distance_detection + 1
         for wall in walls:
             x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
-            if np.sqrt((x_i - x_drone)**2 + (y_i - y_drone)**2) < self._distance_detection:
-                self.set_distance(np.sqrt((x_i - x_drone)**2 + (y_i - y_drone)**2))
-                return True
+            if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
+                distance = np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2)
+        if distance <= self._distance_detection:
+            self.set_distance(distance)
+            return True
         return False
 
     def lidar_reading(self):
