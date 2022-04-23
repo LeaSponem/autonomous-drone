@@ -39,6 +39,11 @@ class Switch(object):
         else:
             raise ValueError("middle is not an acceptable value for a 2-way switch")
 
+    """
+    Functions to check the state of the RC Transmitter switches
+    Two way switches can be either up or down
+    Three way switches can be either up, middle or down
+    """
     def is_up(self):
         return self.state == "up"
 
