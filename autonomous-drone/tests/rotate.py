@@ -23,7 +23,7 @@ while drone.mission_running():
         drone.set_guided_mode()
         time.sleep(1)
         print("Spin")
-        drone.right_rotate(15)
+        drone.send_mavlink_right_rotate(15)
         spining = False
     if drone.switches[switch_spin].is_up() and not spining:
         spining = True
