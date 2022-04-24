@@ -1,9 +1,7 @@
 import time
 
-
-DEFAULT_CRITICAL_DISTANCE = 50  # in cm
-
 # -------- Parent range sensor class ---------
+DEFAULT_CRITICAL_DISTANCE = 1
 
 
 class RangeSensor:
@@ -21,7 +19,6 @@ class RangeSensor:
     def critical_distance_reached(self):
         """ Checks if the range is inferior to the critical distance of the sensor
         Returns True if that's the case, False otherwise"""
-
         if 0 < self.range < self.critical_distance:
             return True
         return False

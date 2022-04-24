@@ -1,7 +1,6 @@
 import time
 import sys
 import numpy as np
-import RPi.GPIO as GPIO
 from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
@@ -10,20 +9,23 @@ from tf_mini import TFMiniPlus
 
 
 class InspectionDrone(object):
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, buzzer_pin=None,
-                 lidar_address=None, critical_distance_lidar=30):
+    """
+    InspectionDrone class to interact with the drone
+    Relies on the dronekit vehicle class
+    """
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
+                 lidar_address=None, critical_distance_lidar=300):
         """
-        :rtype: object
+        Constructor: initialize a vehicle instance
+        Inputs:
+        - connection_string: address of connection
+        - baudrate: rate of information transmission
+        - two_way_switches: list of two way switches on the RC Transmitter
+        - three_way_switches: list of three way switches on the RC Transmitter
+        - lidar_address: I2C address
+        - critical_distance_lidar: distance of obstacle detection
         """
-        # Initialize buzzer, making sure it is down
-        if buzzer_pin is None:
-            self._buzzerPin = 23
-        else:
-            self._buzzerPin = buzzer_pin
-        GPIO.setmode(GPIO.BCM)
-        GPIO.setup(self._buzzerPin, GPIO.OUT)
-        GPIO.output(self._buzzerPin, GPIO.LOW)
-
+        # Connection RaspberryPi/Pixhawk
         try:
             print("Trying to connect to the drone")
             self.vehicle = connect(connection_string, baudrate, wait_ready=True)
@@ -43,8 +45,10 @@ class InspectionDrone(object):
 
         @self.vehicle.on_message('RC_CHANNELS')
         def RC_CHANNEL_listener(vehicle, name, message):
-            # Write the correct values to the vehicle._channels
-            # (without this, vehicle._channels is not correctly updated (only 8 channels)
+            """
+            Write the correct values to the vehicle._channels
+            Without this, vehicle._channels is not correctly updated (only 8 channels)
+            """
             set_rc(vehicle, 1, message.chan1_raw)
             set_rc(vehicle, 2, message.chan2_raw)
             set_rc(vehicle, 3, message.chan3_raw)
@@ -73,24 +77,20 @@ class InspectionDrone(object):
         self._elapsed_time_mission = 0
         self._mission_running = False
         self._last_flight_mode = self.vehicle.mode
-        self._rotation_angle = 0
-        self._absolute_yaw = np.pi/2
+        self._yaw = 0
         self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
 
-    def __del__(self):
-        GPIO.output(self._buzzerPin, GPIO.LOW)
-
-    # Will update the switch. We enumerate every value in the vehicle.channels dictionary, and set switch mode
-    # according to the mapping
     def update_switch_states(self):
+        """
+        Update the switch states. Enumerate every value in the vehicle.channels dictionary
+        and set switch mode (down, up or middle) according to the mapping
+        """
         for index, (key, value) in enumerate(self.vehicle.channels.items()):
-
             if int(key) in self._two_way_switches:
                 if value < 1500:
                     self.switches[int(key)].set_state("down")
                 if value > 1500:
                     self.switches[int(key)].set_state("up")
-
             if int(key) in self._three_way_switches:
                 if value < 1200:
                     self.switches[int(key)].set_state("down")
@@ -100,6 +100,11 @@ class InspectionDrone(object):
                     self.switches[int(key)].set_state("up")
 
     def update_detection(self, use_lidar=True, debug=False):
+        """
+        Update the distance read by the sensor and return if an obstacle is detected
+        An obstacle is detected if the distance read is inferior to the critical distance
+        """
+        # Debug mode: read and print distance from sensor
         if self._lidar.read_distance() and debug:
             print("Lidar range:" + str(self._lidar.get_distance()))
         if use_lidar and self._lidar.critical_distance_reached():
@@ -116,6 +121,10 @@ class InspectionDrone(object):
             return time.time() - self._time_last_obstacle_detected
 
     def do_lidar_reading(self):
+        """
+        An interval is fixed between two lidar readings
+        Return True if the time since the last reading is superior to this interval
+        """
         return self._lidar.lidar_reading()
 
     def obstacle_detected(self):
@@ -131,8 +140,9 @@ class InspectionDrone(object):
 
     def _send_ned_velocity(self, velocity_x, velocity_y, velocity_z):
         """
-        Move vehicle in direction based on specified velocity vectors.
+        Move vehicle in a direction based on specified velocity vectors.
         Modified version of the dronekit one, only sends 1 mavlink message
+        Velocity is set in the drone frame
         """
         msg = self.vehicle.message_factory.set_position_target_local_ned_encode(
             0,  # time_boot_ms (not used)
@@ -162,71 +172,88 @@ class InspectionDrone(object):
         self.vehicle.send_mavlink(msg)
 
     def send_mavlink_go_forward(self, velocity):
-        print("Going forward")
+        """
+        Send a mavlink velocity command to move the drone forward
+        Input: velocity in m/s
+        """
         self._send_ned_velocity(velocity, 0, 0)
 
     def send_mavlink_go_left(self, velocity):
-        print("Going left")
+        """
+        Send a mavlink velocity command to move the drone on its left
+        Input: velocity in m/s
+        """
         self._send_ned_velocity(0, -velocity, 0)
 
     def send_mavlink_go_right(self, velocity):
-        print("Going right")
+        """
+        Send a mavlink velocity command to move the drone on its right
+        Input: velocity in m/s
+        """
         self._send_ned_velocity(0, velocity, 0)
 
     def send_mavlink_go_backward(self, velocity):
-        print("Going backward")
+        """
+        Send a mavlink velocity command to move the drone backward
+        Input: velocity in m/s
+        """
         self._send_ned_velocity(-velocity, 0, 0)
 
     def send_mavlink_go_in_plane(self, velocity_x, velocity_y):
+        """
+        Send a mavlink velocity command to move the drone on a plane
+        Input: velocity along the drone X and Y axis, in m/s
+        """
         self._send_ned_velocity(velocity_x, velocity_y, 0)
 
     def send_mavlink_stay_stationary(self):
-        print("Stopping")
+        """
+        Send a mavlink velocity command to set the drone velocity to 0
+        """
         self._send_ned_velocity(0, 0, 0)
 
     def send_mavlink_right_rotate(self, angle):
-        if self._rotation_angle > 0:
-            print("Drone already rotating")
-        else:
-            print("Right rotation")
-            self._rotation_angle = angle
-            self._send_condition_yaw_command(angle, 1)
+        """
+        Send a mavlink yaw command to rotate the drone
+        Input: angle of rotation in degrees
+        """
+        print("Right rotation")
+        self._send_condition_yaw_command(angle, 1)
 
     def send_mavlink_left_rotate(self, angle):
-        if self._rotation_angle > 0:
-            print("Drone already rotating")
-        else:
-            print("Left rotation")
-            self._rotation_angle = angle
-            self._send_condition_yaw_command(angle, -1)
+        """
+        Send a mavlink yaw command to rotate the drone
+        Input: angle of rotation in degrees
+        """
+        print("Left rotation")
+        self._send_condition_yaw_command(angle, -1)
 
-    def check_rotation(self, threshold):
-        if self._rotation_angle == 0:
-            return True
-        elif ((180 / np.pi) * self.vehicle.attitude.yaw+np.pi/2 - self._absolute_yaw - self._rotation_angle) < threshold:
-            self._absolute_yaw = self._absolute_yaw + self._rotation_angle + self.vehicle.attitude.yaw + np.pi/2
-            self._rotation_angle = 0
-            return True
-        return False
+    def _update_yaw(self):
+        """
+        Update the yaw value converted from [-180,180] to [0,360]
+        """
+        self._yaw = (180/np.pi)*self.vehicle.attitude.yaw
+        if self._yaw < 0:
+            self._yaw += 360
 
-    def is_armable(self):
-        return self.vehicle.is_armable
-
-    def arm(self):
-        self.vehicle.armed
-
+    # Functions to check the drone actual flight mode
     def is_in_auto_mode(self):
         return self.vehicle.mode == VehicleMode("AUTO")
 
     def is_in_guided_mode(self):
         return self.vehicle.mode == VehicleMode("GUIDED")
 
+    # Functions to set the drone flight mode
     def set_auto_mode(self):
         self.vehicle.mode = VehicleMode("AUTO")
 
     def set_guided_mode(self):
         self.vehicle.mode = VehicleMode("GUIDED")
 
+    def set_flight_mode(self, flightmode):
+        self.vehicle.mode = flightmode
+
+    # Functions to access the drone last flight mode
     def get_last_flight_mode(self):
         return self._last_flight_mode
 
@@ -243,20 +270,9 @@ class InspectionDrone(object):
     def abort_mission(self):
         self._mission_running = False
 
-    def buzz(self, freq=1):
-        if int(time.time() * freq) % 2 == 0:
-            GPIO.output(self._buzzerPin, GPIO.HIGH)
-        if int(time.time() * freq) % 2 == 1:
-            GPIO.output(self._buzzerPin, GPIO.LOW)
-
     def time_since_mission_launch(self):
         return self._elapsed_time_mission
 
-    def stop_buzz(self):
-        GPIO.output(self._buzzerPin, GPIO.LOW)
-
-    def set_flight_mode(self, flightmode):
-        self.vehicle.mode = flightmode
-
     def get_distance(self):
         return self._lidar.get_distance()
+      
