@@ -272,3 +272,7 @@ class InspectionDrone(object):
 
     def time_since_mission_launch(self):
         return self._elapsed_time_mission
+
+    def get_distance(self):
+        return self._lidar.get_distance()
+      
