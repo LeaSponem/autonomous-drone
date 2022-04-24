@@ -35,11 +35,11 @@ class WallObstacle(Obstacle):
         a_drone = np.sin(angle_drone)
         b_drone = y_drone - x_drone*np.sin(angle_drone)
         # Drone perpendicular to the X axis
-        if np.abs(angle_drone - 90) < 0.5:
+        if np.abs(angle_drone - 90) < 0.5 or np.abs(angle_drone - 270) < 0.5:
             x_intersection = x_drone
             y_intersection = a_wall*x_drone + b_wall
         # Obstacle perpendicular to the X axis
-        elif np.abs(self.angle - 90) < 0.5:
+        elif np.abs(self.angle - 90) < 0.5 or np.abs(self.angle - 270) < 0.5:
             x_intersection = self.get_obstacle_origin()[0]
             y_intersection = a_drone*x_intersection+b_drone
         else:
