@@ -8,7 +8,6 @@ drone = InspectionDrone('/dev/serial0', baudrate=115200,
 
 
 while True:
-    # print(drone.is_in_guided_mode())
     drone.update_switch_states()
     drone.update_time()
     if drone.is_in_guided_mode():
