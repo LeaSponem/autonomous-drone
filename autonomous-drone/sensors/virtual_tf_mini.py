@@ -31,19 +31,41 @@ class VirtualTFMiniPlus(RangeSensor):
         - x_drone, y_drone: virtual drone coordinates
         - angle_drone: angle between the lidar direction and the X axis
         - walls: list of wall obstacles
-        Return the min distance from an obstacle if the distance is within the sensor range
+        Return True if an obstacle is within the sensor range, False otherwise
+        Update the distance value to the min distance from an obstacle or to 0 otherwise
         """
         distance = self._distance_detection + 1
         for wall in walls:
             # Check that the drone and the obstacle are not parallel
             if np.abs(wall.angle - angle_drone) > 0.5:
                 x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
-                # Keep only the obstacle with the minimum distance from the drone
-                if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
-                    distance = np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2)
+                # Only keep the obstacles in front of the drone direction
+                if self._check_obstacle_orientation(x_drone, y_drone, angle_drone, x_i, y_i):
+                    # Only keep the obstacle with the minimum distance from the drone
+                    if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
+                        distance = np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2)
         # Check if the obstacle is within the sensor range
         if distance <= self._distance_detection:
             self.set_distance(distance)
+            return True
+        self.set_distance(0)
+        return False
+
+    def _get_max_range_coordinates(self, x_drone, y_drone, angle_drone):
+        """
+        Compute the coordinates of the max range point in the drone current direction
+        """
+        x_max_range = x_drone + self._distance_detection * np.cos(angle_drone)
+        y_max_range = y_drone + self._distance_detection * np.sin(angle_drone)
+        return x_max_range, y_max_range
+
+    def _check_obstacle_orientation(self, x_drone, y_drone, angle_drone, x_intersection, y_intersection):
+        """
+        Check if the distance is measured in front of the drone
+        Return True if the intersection point is in front of the drone, False otherwise
+        """
+        x_max_range, y_max_range = self._get_max_range_coordinates(x_drone, y_drone, angle_drone)
+        if np.sqrt((x_max_range - x_intersection)**2 + (y_max_range - y_intersection)**2) < self._distance_detection:
             return True
         return False
 
