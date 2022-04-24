@@ -19,13 +19,15 @@ drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                      critical_distance_lidar=1)
 
-wall = WallObstacle(-10, 10, 20, 0)
-walls = [wall]
+wall1 = WallObstacle(-10, 10, 20, 0)
+wall2 = WallObstacle(-10, 11, 20, 0)
+wall3 = WallObstacle(-10, 12, 20, 90)
+wall4 = WallObstacle(-10, -10, 20, 0)
+
+walls = [wall1, wall2, wall3, wall4]
 
 drone.arm_and_takeoff(2)
-first_detection = True
 drone.launch_mission()
-drone.send_mavlink_go_forward(0.1)
 
 while drone.mission_running():
     drone.update_time()  # update time since connexion and mission's start
@@ -33,6 +35,7 @@ while drone.mission_running():
         drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
     if drone.obstacle_detected():
         print("Obstacle detected")
-        drone.send_mavlink_stay_stationary()
-    drone.send_mavlink_go_forward(1)
+    if drone.time_since_last_obstacle_detected() > 60:
+        drone.abort_mission()
+    drone.send_mavlink_go_forward(0.5)
     time.sleep(0.1)
