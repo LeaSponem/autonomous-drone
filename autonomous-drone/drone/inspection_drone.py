@@ -322,4 +322,6 @@ class InspectionDrone(object):
 
     def get_velocity(self):
         return self.vehicle.velocity
+    def get_yaw(self):
+        return self._yaw
       

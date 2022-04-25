@@ -1,4 +1,4 @@
-import smbus2
+#import smbus2
 from range_sensors import RangeSensor
 import time
 
