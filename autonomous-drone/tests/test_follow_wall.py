@@ -1,7 +1,6 @@
 """
 @author: Clara
 @subject: Suivi de mur
-
 """
 import sys
 import time
