@@ -20,6 +20,7 @@ args = parser.parse_args()
 
 connection_string = args.connect
 target_distance = 300     #Distance that must be kept between the drone and the wall
+time_length_simu = 30     #Length of the simulation in second
 
 """ -------- Initialization ------- """
 drone = VirtualDrone(connection_string, baudrate=115200,
@@ -62,20 +63,25 @@ switch_obstacle = 9
 drone.launch_mission()
 obstacle_detected = False
 
-K = 0.001                   #Coefficient entre l'erreur de distance et la vitesse selon x
-mission_time = 0            #Increment for the plot log
-Vx_ordered = 0              #Definition of Vx
+K = 0.001                    #Coefficient for the PID
+mission_time = 0           #Increment for the plot log
+Vx_ordered = 0             #Definition of Vx
 Vx_measured = 0
+yaw = 0
 x = 0                       #Increment for Simulator use only
 
 " -------- Definition of a log -------- "
 list_Vx_ordered = []
 list_Vx_measured = []
 list_measured_distance = []
+list_yaw = []
 list_time = []
 
 " ------- Mission running -------- "
-while drone.mission_running() and x <=200:
+time_0 = time.time()
+while drone.mission_running() and mission_time < time_length_simu:
+    mission_time = time.time() - time_0
+
     #Updating everything
     drone.update_time()
     drone.update_switch_states()
@@ -96,52 +102,53 @@ while drone.mission_running() and x <=200:
 
     measured_distance = drone.get_distance()
     """
-    # Following a wall mode in Simulator
-    if x == 0 :                    #Begin simulation at 3 s
-        first_detection = True
-        print("following")
-    if x == 200 :                    #End simulation at 20 s
-        first_detection = False
-    x += 1
 
     #Echelon
-    #measured_distance = 500
-
+    measured_distance = 500
     #Rampe
-    measured_distance = x * 2
-
+    #measured_distance = mission_time * 2
     #Sinus
-    #measured_distance = target_distance + 200 * np.sin(x/10)
+    #measured_distance = target_distance + 200 * np.sin(mission_time * 0.1)
 
     #Following a wall
-    if first_detection is True:
-        Vx_ordered = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
-        Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
-        Vy = 0.5                                                    #Lateral speed is 0.5 m/s
-        drone._send_ned_velocity(Vx_ordered, Vy, 0)
-    time.sleep(0.1)
+    Vx_ordered = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
+    #Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
+    Vy = 0.5                                                    #Lateral speed is 0.5 m/s
+    drone._send_ned_velocity(Vx_ordered, Vy, 0)
 
     #Updating the log
-    mission_time += 0.1
     Vx_measured = drone.get_velocity()[0]
+    yaw = drone.get_yaw()
     list_time.append(mission_time)
     list_Vx_ordered.append(Vx_ordered)
     list_Vx_measured.append(Vx_measured)
     list_measured_distance.append(measured_distance)
+    list_yaw.append(yaw)
 
+    time.sleep(0.1)
+    #End of the while simulation
+
+drone.vehicle.mode = VehicleMode("RTL")         #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
+
+""" -------- Plot of the logs -------- """
 plt.plot(list_time,list_Vx_ordered, label="Ordered")
 plt.plot(list_time,list_Vx_measured, label="Measured")
 plt.xlabel("Time")
 plt.ylabel("Speed on x")
 plt.legend()
+title = "K=" + str(K)
+plt.title(title)
 plt.show()
-plt.savefig("Vx_log.png")
-
-print(list_Vx_ordered[100:110])
-#measured_distance and Vx_ordered are proportionnal, it's not very interesting to see it again
+#plt.savefig("Vx_log.png")
 
 plt.plot(list_time,list_measured_distance)
 plt.xlabel("Time")
 plt.ylabel("Measured Distance")
 plt.show()
-plt.savefig("Measured_distance_log.png")
+#plt.savefig("Measured_distance_log.png")
+
+plt.plot(list_time,list_yaw)
+plt.xlabel("Time")
+plt.ylabel("Yaw")
+plt.show()
+#plt.savefig("Yaw_log.png")
