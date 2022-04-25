@@ -6,6 +6,7 @@
 import sys
 import time
 import numpy as np
+import matplotlib.pyplot as plt
 import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../sensors')
@@ -20,6 +21,7 @@ args = parser.parse_args()
 connection_string = args.connect
 target_distance = 300     #Distance that must be kept between the drone and the wall
 
+""" -------- Initialization ------- """
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8],
                      three_way_switches=[5, 6, 8, 9, 10, 11, 12],
@@ -61,10 +63,19 @@ drone.launch_mission()
 obstacle_detected = False
 
 K = 0.001                   #Coefficient entre l'erreur de distance et la vitesse selon x
+mission_time = 0            #Increment for the plot log
+Vx_ordered = 0              #Definition of Vx
+Vx_measured = 0
+x = 0                       #Increment for Simulator use only
 
-x = 0   #Increment for Simulator use only
+" -------- Definition of a log -------- "
+list_Vx_ordered = []
+list_Vx_measured = []
+list_measured_distance = []
+list_time = []
 
-while drone.mission_running():
+" ------- Mission running -------- "
+while drone.mission_running() and x <=200:
     #Updating everything
     drone.update_time()
     drone.update_switch_states()
@@ -86,19 +97,51 @@ while drone.mission_running():
     measured_distance = drone.get_distance()
     """
     # Following a wall mode in Simulator
-    x+=1
-    if x == 50 :                    #Begin simulation at 5 s
+    if x == 0 :                    #Begin simulation at 3 s
         first_detection = True
         print("following")
-    if x == 500 :                    #End simulation at 50 s
+    if x == 200 :                    #End simulation at 20 s
         first_detection = False
-    measured_distance = target_distance + 200 * np.sin(x)
+    x += 1
+
+    #Echelon
+    #measured_distance = 500
+
+    #Rampe
+    measured_distance = x * 2
+
+    #Sinus
+    #measured_distance = target_distance + 200 * np.sin(x/10)
 
     #Following a wall
     if first_detection is True:
-        Vx = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
-        Vx = np.min([np.abs(Vx), 0.5])*np.sign(Vx)                    #Verify it doesn't exceed Vmax = 0.5 m/s
+        Vx_ordered = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
+        Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
         Vy = 0.5                                                    #Lateral speed is 0.5 m/s
-        print("Vx=", Vx," and Vy=", Vy)
-        drone._send_ned_velocity(Vx, Vy, 0)
+        drone._send_ned_velocity(Vx_ordered, Vy, 0)
     time.sleep(0.1)
+
+    #Updating the log
+    mission_time += 0.1
+    Vx_measured = drone.get_velocity()[0]
+    list_time.append(mission_time)
+    list_Vx_ordered.append(Vx_ordered)
+    list_Vx_measured.append(Vx_measured)
+    list_measured_distance.append(measured_distance)
+
+plt.plot(list_time,list_Vx_ordered, label="Ordered")
+plt.plot(list_time,list_Vx_measured, label="Measured")
+plt.xlabel("Time")
+plt.ylabel("Speed on x")
+plt.legend()
+plt.show()
+plt.savefig("Vx_log.png")
+
+print(list_Vx_ordered[100:110])
+#measured_distance and Vx_ordered are proportionnal, it's not very interesting to see it again
+
+plt.plot(list_time,list_measured_distance)
+plt.xlabel("Time")
+plt.ylabel("Measured Distance")
+plt.show()
+plt.savefig("Measured_distance_log.png")
