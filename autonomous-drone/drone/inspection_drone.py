@@ -77,6 +77,8 @@ class InspectionDrone(object):
         self._elapsed_time_mission = 0
         self._mission_running = False
         self._last_flight_mode = self.vehicle.mode
+        self._rotation_angle = 0
+        self._yaw_before_rotation = 0
         self._yaw = 0
         self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
 
@@ -176,35 +178,46 @@ class InspectionDrone(object):
         Send a mavlink velocity command to move the drone forward
         Input: velocity in m/s
         """
-        self._send_ned_velocity(velocity, 0, 0)
+        # Check that the drone isn't rotating
+        if not self._is_rotating():
+            self._send_ned_velocity(velocity, 0, 0)
+            print("moving forward")
 
     def send_mavlink_go_left(self, velocity):
         """
         Send a mavlink velocity command to move the drone on its left
         Input: velocity in m/s
         """
-        self._send_ned_velocity(0, -velocity, 0)
+        # Check that the drone isn't rotating
+        if not self._is_rotating():
+            self._send_ned_velocity(0, -velocity, 0)
 
     def send_mavlink_go_right(self, velocity):
         """
         Send a mavlink velocity command to move the drone on its right
         Input: velocity in m/s
         """
-        self._send_ned_velocity(0, velocity, 0)
+        # Check that the drone isn't rotating
+        if not self._is_rotating():
+            self._send_ned_velocity(0, velocity, 0)
 
     def send_mavlink_go_backward(self, velocity):
         """
         Send a mavlink velocity command to move the drone backward
         Input: velocity in m/s
         """
-        self._send_ned_velocity(-velocity, 0, 0)
+        # Check that the drone isn't rotating
+        if not self._is_rotating():
+            self._send_ned_velocity(-velocity, 0, 0)
 
     def send_mavlink_go_in_plane(self, velocity_x, velocity_y):
         """
         Send a mavlink velocity command to move the drone on a plane
         Input: velocity along the drone X and Y axis, in m/s
         """
-        self._send_ned_velocity(velocity_x, velocity_y, 0)
+        # Check that the drone isn't rotating
+        if not self._is_rotating():
+            self._send_ned_velocity(velocity_x, velocity_y, 0)
 
     def send_mavlink_stay_stationary(self):
         """
@@ -217,16 +230,47 @@ class InspectionDrone(object):
         Send a mavlink yaw command to rotate the drone
         Input: angle of rotation in degrees
         """
-        print("Right rotation")
-        self._send_condition_yaw_command(angle, 1)
+        # Check that the drone isn't already rotating
+        if not self._is_rotating():
+            # Update the rotation angle and the yaw before the rotation
+            self._update_yaw()
+            self._yaw_before_rotation = self._yaw
+            self._rotation_angle = angle
+            # Send mavlink command
+            print("right rotation")
+            self._send_condition_yaw_command(angle, 1)
 
     def send_mavlink_left_rotate(self, angle):
         """
         Send a mavlink yaw command to rotate the drone
         Input: angle of rotation in degrees
         """
-        print("Left rotation")
-        self._send_condition_yaw_command(angle, -1)
+        # Check that the drone isn't already rotating
+        if not self._is_rotating():
+            # Update the rotation angle and the yaw before the rotation
+            self._update_yaw()
+            self._yaw_before_rotation = self._yaw
+            self._rotation_angle = -angle
+            # Send mavlink command
+            print("Left rotation")
+            self._send_condition_yaw_command(angle, -1)
+
+    def _is_rotating(self):
+        """
+        Check if the drone is actually rotating
+        Compare the actual yaw value to the yaw value when the rotation started
+        Return True is the drone is rotating, False otherwise
+        """
+        self._update_yaw()
+        # Compute the rotation between the initial and current position
+        angle_var = np.abs(self._yaw_before_rotation + self._rotation_angle - self._yaw)
+        if angle_var > 360:
+            angle_var -= 360
+        # Check if the drone is still rotating
+        if angle_var < 0.5 or self._rotation_angle == 0:
+            self._rotation_angle = 0
+            return False
+        return True
 
     def _update_yaw(self):
         """
