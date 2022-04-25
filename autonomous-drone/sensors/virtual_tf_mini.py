@@ -34,22 +34,23 @@ class VirtualTFMiniPlus(RangeSensor):
         Return True if an obstacle is within the sensor range, False otherwise
         Update the distance value to the min distance from an obstacle or to 0 otherwise
         """
-        distance = self._distance_detection + 1
-        for wall in walls:
-            # Check that the drone and the obstacle are not parallel
-            if np.abs(wall.angle - angle_drone) > 0.5:
-                x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
-                # Only keep the obstacles in front of the drone direction
-                if self._check_obstacle_orientation(x_drone, y_drone, angle_drone, x_i, y_i):
-                    # Only keep the obstacle with the minimum distance from the drone
-                    if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
-                        distance = np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2)
-        # Check if the obstacle is within the sensor range
-        if distance <= self._distance_detection:
-            self.set_distance(distance)
-            return True
-        self.set_distance(0)
-        return False
+        if walls is not None:
+            distance = self._distance_detection + 1
+            for wall in walls:
+                # Check that the drone and the obstacle are not parallel
+                if np.abs(wall.angle - angle_drone) > 0.5:
+                    x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
+                    # Only keep the obstacles in front of the drone direction
+                    if self._check_obstacle_orientation(x_drone, y_drone, angle_drone, x_i, y_i):
+                        # Only keep the obstacle with the minimum distance from the drone
+                        if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
+                            distance = np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2)
+            # Check if the obstacle is within the sensor range
+            if distance <= self._distance_detection:
+                self.set_distance(distance)
+                return True
+            self.set_distance(0)
+            return False
 
     def _get_max_range_coordinates(self, x_drone, y_drone, angle_drone):
         """
