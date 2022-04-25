@@ -319,4 +319,7 @@ class InspectionDrone(object):
 
     def get_distance(self):
         return self._lidar.get_distance()
+
+    def get_velocity(self):
+        return self.vehicle.velocity
       
