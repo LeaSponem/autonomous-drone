@@ -35,26 +35,7 @@ drone = InspectionDrone('/dev/serial0', baudrate=115200,
                         lidar_address=0x10, critical_distance_lidar=target_distance)
 """
 
-
-def arm_and_takeoff(vehicle, tgt_altitude):
-    print("Arming motors")
-    while not vehicle.is_armable:
-        time.sleep(1)
-    vehicle.mode = VehicleMode("GUIDED")
-    vehicle.armed = True
-    while not vehicle.armed:
-        print("Waiting for arming")
-        time.sleep(1)
-    print("Takeoff")
-    vehicle.simple_takeoff(tgt_altitude)
-    while True:
-        altitude = vehicle.location.global_relative_frame.alt
-        if altitude >= tgt_altitude -1:
-            print("Altitude reached")
-            break
-        time.sleep(1)
-
-arm_and_takeoff(drone.vehicle, 2)
+drone.arm_and_takeoff(2)
 first_detection = False
 drone.launch_mission()
 
