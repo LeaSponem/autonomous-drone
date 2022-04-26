@@ -64,7 +64,7 @@ drone.launch_mission()
 obstacle_detected = False
 
 " -------- Parameters for Automatic Speed Control -------- "
-K = 0.1                 #Coefficient for the PID
+K = 0.5                 #Coefficient for the PID
 V_targeted = 0.2           # m/s
 
 " -------- Variables for the log --------"
@@ -75,9 +75,9 @@ yaw = 0
 
 " -------- Definition of the log -------- "
 list_V_targeted = [V_targeted]
-list_V_ordered = [V_ordered]
+#list_V_ordered = [V_ordered]
 list_V_measured = [V_measured]
-list_yaw = []
+#list_yaw = []
 list_time = [0]
 
 " ------- Mission running -------- "
@@ -95,20 +95,23 @@ while drone.mission_running() and mission_time < time_length_simu:
     - V_targeted is the speed we want
     - V_ordered is the speed we enter the drone so it goes at V_targeted
     - V_measured is the real speed of the drone 
-    """
-    V_measured = drone.get_velocity()[0]
+    Update : this code is no longer useful, it's not pertinent to regulate the drone on its speed
+    
     V_ordered = K * (V_targeted - V_measured)
 
     drone._send_ned_velocity(V_ordered, 0, 0)
+    """
 
-    #Updating the log
-    yaw = drone.get_yaw()
+    """------ Response to an echelon ------"""
+    drone._send_ned_velocity(V_targeted, 0, 0)
+    V_measured = drone.get_velocity()[0]
+
+    """------ Updating the log ------"""
 
     list_time.append(mission_time)
     list_V_targeted.append(V_targeted)
-    list_V_ordered.append(V_ordered)
+    #list_V_ordered.append(V_ordered)
     list_V_measured.append(V_measured)
-    list_yaw.append(yaw)
 
     time.sleep(0.1)
     #End of the while simulation
@@ -117,7 +120,7 @@ drone.vehicle.mode = VehicleMode("RTL")         #REMOVE THIS LINE IF IRL, FOR SI
 
 """ -------- Plot of the logs -------- """
 plt.plot(list_time,list_V_targeted, label="Targeted")
-plt.plot(list_time,list_V_ordered, label="Ordered")
+#plt.plot(list_time,list_V_ordered, label="Ordered")
 plt.plot(list_time,list_V_measured, label="Measured")
 plt.xlabel("Time")
 plt.ylabel("Speed on x")
