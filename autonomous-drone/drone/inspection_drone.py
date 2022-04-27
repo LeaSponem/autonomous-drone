@@ -5,7 +5,7 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
 sys.path.insert(0, '../sensors')
-from drone_sensors import DroneSensors
+from drone_sensors import ThreeLidarSensorsDetection
 
 
 class InspectionDrone(object):
@@ -80,7 +80,7 @@ class InspectionDrone(object):
         self._rotation_angle = 0
         self._yaw_before_rotation = 0
         self._yaw = 0
-        self._lidar = DroneSensors(lidar_address, lidar_angle, critical_distance_lidar)
+        self._lidar = ThreeLidarSensorsDetection(lidar_address, lidar_angle, critical_distance_lidar)
 
     def update_switch_states(self):
         """
@@ -107,9 +107,9 @@ class InspectionDrone(object):
         An obstacle is detected if the distance read is inferior to the critical distance
         """
         # Debug mode: read and print distance from sensor
-        if self._lidar.get_front_lidar().read_distance() and debug:
-            print("Lidar range:" + str(self._lidar.get_front_lidar().get_distance()))
-        if use_lidar and self._lidar.get_front_lidar().critical_distance_reached():
+        if self._lidar.read_distance() and debug:
+            print("Lidar range:" + str(self._lidar.get_distance()))
+        if use_lidar and self._lidar.critical_distance_reached():
             if self.obstacle_detected():
                 self._time_last_obstacle_detected = time.time()
             self._obstacle_detected = True
