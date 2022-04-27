@@ -15,7 +15,6 @@ class DroneLidarSensors(object):
     def _init_lidar_sensors(self, lidar_address, lidar_angle):
         """
         Initialize a list of lidar sensors with their address and angle
-        Separate the front lidar from the others
         """
         lidar_sensors = []  # List of lidar sensors
         if lidar_address is not None:
@@ -23,31 +22,40 @@ class DroneLidarSensors(object):
             for address, angle in index.items():
                 # Initialize a lidar
                 self.lidar_sensors.append(TFMiniPlus(address, angle, self._critical_distance_lidar))
-            self._sort_sensors()
         return lidar_sensors
 
-    def get_front_lidar(self):
-        return self.lidar_sensors[1]
 
-    def get_side_lidar(self):
-        return [self.lidar_sensors[0], self.lidar_sensors[2]]
+class ThreeLidarSensorsDetection(object):
+    def __init__(self, lidar_address, lidar_angle, critical_distance_lidar=50):
+        self._lidar_sensors = DroneLidarSensors(lidar_address, lidar_angle, critical_distance_lidar).lidar_sensors
+        self._right_lidar = None
+        self._left_lidar = None
+        self._front_lidar = None
+        self._sort_sensors()
 
     def _sort_sensors(self):
-        lidar_sensors = [None]*3
-        for lidar in self.lidar_sensors:
+        for lidar in self._lidar_sensors:
             if lidar.angle == 0:
-                lidar.name = "Front"
-                lidar_sensors[1] = lidar
+                lidar.name = "Front lidar"
+                self._front_lidar = lidar
             elif lidar.angle == 90:
-                lidar.name = "Left"
-                lidar_sensors[0] = lidar
+                lidar.name = "Left lidar"
+                self._left_lidar = lidar
             elif lidar.angle == -90:
-                lidar.name = "Right"
-                lidar_sensors[2] = lidar
-        self.lidar_sensors = lidar_sensors
+                lidar.name = "Right lidar"
+                self._right_lidar = lidar
+
+    def get_front_lidar(self):
+        return self._front_lidar
+
+    def get_right_lidar(self):
+        return self._right_lidar
+
+    def get_left_lidar(self):
+        return self._left_lidar
 
     def read_right_distance(self):
-        self.lidar_sensors[2].read_distance()
+        self._right_lidar.read_distance()
 
     def read_left_distance(self):
-        self.lidar_sensors[0].read_distance()
+        self._left_lidar.read_distance()
