@@ -54,6 +54,15 @@ class ThreeLidarSensorsDetection(object):
     def get_left_lidar(self):
         return self._left_lidar
 
+    def read_distance(self):
+        self._front_lidar.read_distance()
+
+    def get_distance(self):
+        return self._front_lidar.get_distance()
+
+    def critical_distance_reached(self):
+        return self._front_lidar.critial_distance_reached()
+
     def read_right_distance(self):
         self._right_lidar.read_distance()
 
