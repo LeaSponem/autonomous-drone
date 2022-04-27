@@ -12,24 +12,15 @@ import time
 import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
-from virtual_drone import VirtualDrone
+#from virtual_drone import VirtualDrone
+from inspection_drone import InspectionDrone
 from wall import WallObstacle
 from dronekit import VehicleMode
 import numpy as np
-import matplotlib.pyplot as plt
-
-" -------- Initialization -------- "
-parser = argparse.ArgumentParser(description='commands')
-parser.add_argument('--connect')
-args = parser.parse_args()
-
-connection_string = args.connect
-
-drone = VirtualDrone(connection_string, baudrate=115200,
-                     two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                     critical_distance_lidar=2)
+#import matplotlib.pyplot as plt
 
 " -------- Constants and Variables -------- "
+#For simulator only
 wall1 = WallObstacle(-10, 5, 20, 0)
 walls = [wall1]
 
@@ -40,7 +31,24 @@ measured_distance = -1     #Data from the sensor
 yaw = 0
 
 K = 0.05                  #Coefficient for the PID
-target_distance = 2      #The drone must stop at this distance from the obstacle
+target_distance = 200      #The drone must stop at this distance from the obstacle
+
+" -------- Initialization -------- "
+parser = argparse.ArgumentParser(description='commands')
+parser.add_argument('--connect')
+args = parser.parse_args()
+
+connection_string = args.connect
+"""
+drone = VirtualDrone(connection_string, baudrate=115200,
+                     two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
+                     critical_distance_lidar=target_distance)
+
+"""
+drone = InspectionDrone('/dev/serial0', baudrate=115200,
+                        two_way_switches=[7, 8],
+                        three_way_switches=[5, 6, 8, 9, 10, 11, 12],
+                        lidar_address=0x10, critical_distance_lidar=target_distance)
 
 " -------- Definition of a log -------- "
 list_V_command = []
@@ -50,7 +58,7 @@ list_yaw = []
 list_time = []
 
 " -------- Starting the mission -------- "
-drone.arm_and_takeoff(2)
+#drone.arm_and_takeoff(2)
 drone.launch_mission()
 
 time_0 = time.time()
@@ -61,7 +69,8 @@ while drone.mission_running():
 
     if drone.do_lidar_reading():  # ask a reading every 20 ms
         print("update detection")
-        drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
+        #drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
+        drone.update_detection(use_lidar=True, debug=True)  # distance measure
         measured_distance = drone.get_distance()
 
     if drone.obstacle_detected():
@@ -84,16 +93,41 @@ while drone.mission_running():
 
     drone.send_mavlink_go_forward(V_command)
 
-    if mission_time > 20 :
+    if mission_time > 120 :
             #or np.abs(measured_distance) < 0.05:
         drone.abort_mission()
 
     time.sleep(0.1)
     #measured_distance = -1
 
-drone.vehicle.mode = VehicleMode("RTL")         #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
+#drone.set_flight_mode("RTL")       #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
+drone.set_flight_mode("POSHOLD")
 
-""" -------- Plot of the logs -------- """
+""" -------- Save of the logs -------- """
+name = "log" + str(time.time())+ ".txt"
+f = open(name,"w")
+f.write("Time \n")
+for t in list_time:
+    f.write(str(t)+"\n")
+
+f.write("V_command \n")
+for t in list_V_command:
+    f.write(str(t)+"\n")
+
+f.write("V_measured \n")
+for t in list_V_measured:
+    f.write(str(t)+"\n")
+
+f.write("measured_distance \n")
+for t in list_measured_distance:
+    f.write(str(t)+"\n")
+
+f.write("yaw \n")
+for t in list_yaw:
+    f.write(str(t)+"\n")
+
+
+""" -------- Plot of the logs -------- 
 fig, axes = plt.subplots(nrows=1, ncols=2)
 title = "K=" + str(K)
 
@@ -108,12 +142,6 @@ axes[1].plot([list_time[0],list_time[-1]],[target_distance,target_distance])
 axes[1].set_xlabel("Time")
 axes[1].set_ylabel("Measured Distance")
 
-plt.title(title)
-plt.show()
-"""
-plt.plot(list_time,list_measured_distance)
-plt.xlabel("Time")
-plt.ylabel("Measured Distance")
 plt.title(title)
 plt.show()
 
