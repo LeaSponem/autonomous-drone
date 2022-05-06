@@ -1,8 +1,8 @@
 from range_sensors import RangeSensor
 import numpy as np
 
-DEFAULT_CRITICAL_DISTANCE = 1
-DEFAULT_DISTANCE_DETECTION = 5
+DEFAULT_CRITICAL_DISTANCE = 100
+DEFAULT_DISTANCE_DETECTION = 500
 
 
 class VirtualTFMiniPlus(RangeSensor):
@@ -28,8 +28,8 @@ class VirtualTFMiniPlus(RangeSensor):
         """
         Read artificially the distance between the drone and the obstacles
         Inputs :
-        - x_drone, y_drone: virtual drone coordinates
-        - angle_drone: angle between the lidar direction and the X axis
+        - x_drone, y_drone: virtual drone coordinates (in cm)
+        - angle_drone: angle between the lidar direction and the X axis (in degrees)
         - walls: list of wall obstacles
         Return True if an obstacle is within the sensor range, False otherwise
         Update the distance value to the min distance from an obstacle or to 0 otherwise
