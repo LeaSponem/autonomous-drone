@@ -12,7 +12,7 @@ import time
 import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
-#from virtual_drone import VirtualDrone
+from virtual_drone import VirtualDrone
 from inspection_drone import InspectionDrone
 from wall import WallObstacle
 from dronekit import VehicleMode
@@ -21,7 +21,7 @@ import numpy as np
 
 " -------- Constants and Variables -------- "
 #For simulator only
-wall1 = WallObstacle(-10, 5, 20, 0)
+wall1 = WallObstacle(-1000, 500, 2000, 0)
 walls = [wall1]
 
 mission_time = 0           #Increment for the plot log
@@ -39,7 +39,7 @@ parser.add_argument('--connect')
 args = parser.parse_args()
 
 connection_string = args.connect
-"""
+
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                      critical_distance_lidar=target_distance)
@@ -49,7 +49,7 @@ drone = InspectionDrone('/dev/serial0', baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                         lidar_address=0x10, critical_distance_lidar=target_distance)
-
+"""
 " -------- Definition of a log -------- "
 list_V_command = []
 list_V_measured = []
@@ -58,7 +58,7 @@ list_yaw = []
 list_time = []
 
 " -------- Starting the mission -------- "
-#drone.arm_and_takeoff(2)
+drone.arm_and_takeoff(2)
 drone.launch_mission()
 
 time_0 = time.time()
@@ -69,8 +69,8 @@ while drone.mission_running():
 
     if drone.do_lidar_reading():  # ask a reading every 20 ms
         print("update detection")
-        #drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
-        drone.update_detection(use_lidar=True, debug=True)  # distance measure
+        drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
+        #drone.update_detection(use_lidar=True, debug=True)  # distance measure
         measured_distance = drone.get_distance()
 
     if drone.obstacle_detected():
