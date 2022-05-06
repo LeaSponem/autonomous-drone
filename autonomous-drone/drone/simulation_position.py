@@ -66,6 +66,7 @@ class SimulationPosition:
         """
         For testing purposes only : recreates a X,Y position relative to a point on the map to simulate a local
         positioning system
+        Returns positions x and y in m
         """
 
         delta_lat = drone_location.lat - self._ref_lat
@@ -74,7 +75,7 @@ class SimulationPosition:
         x = x_north * np.cos(self._angle_north_x_axes * np.pi / 180) + y_east * np.sin(self._angle_north_x_axes * np.pi / 180)
         y = x_north * np.sin(self._angle_north_x_axes * np.pi / 180) - y_east * np.cos(self._angle_north_x_axes * np.pi / 180)
 
-        return int(x), int(y)
+        return 0.001*int(x), 0.001*int(y)
 
     def update_position(self):
         if time.time() - self._time_last_update_position > 100:
