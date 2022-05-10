@@ -116,6 +116,7 @@ class PidTools(object):
         self._Ki = gainI
         self._Kd = gainD
         self._commandSaturation = saturation
+        print("PID param set!")
 
     def getPIDParams(self):
         return self._G, self._Ki, self._Kd, self._commandSaturation
