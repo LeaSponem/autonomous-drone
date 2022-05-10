@@ -79,7 +79,7 @@ class PidTools(object):
         self.updateDerivate(error, sampleTime)
         self._newWaypoint = False
         if (self._commandSaturation != 0):
-            self._command = np.max(np.min(self._smoothingFactor * self._G * (
+            self._command = np.maximum(np.minimum(self._smoothingFactor * self._G * (
                         error + self._Ki * self._integralTerm + self._Kd * self._derivateTerm),
                                     self._commandSaturation), -self._commandSaturation)
         else:
