@@ -10,7 +10,7 @@ class VirtualTFMiniPlus(RangeSensor):
     Class for a specific range sensor : the TFMini Plus
     For simulator use only
     """
-    def __init__(self, critical_distance=DEFAULT_CRITICAL_DISTANCE, distance_detection=DEFAULT_DISTANCE_DETECTION):
+    def __init__(self, angle, critical_distance=DEFAULT_CRITICAL_DISTANCE, distance_detection=DEFAULT_DISTANCE_DETECTION):
         """
         Constructor
         Inputs :
@@ -20,7 +20,7 @@ class VirtualTFMiniPlus(RangeSensor):
         # Calls the constructor of the parent class
         RangeSensor.__init__(self, critical_distance)
         self._name = "Lidar"
-        self.angle = 0
+        self.angle = angle
         # Ask a reading every 20 ms
         self._time_between_readings = 0.02
         self._distance_detection = distance_detection
