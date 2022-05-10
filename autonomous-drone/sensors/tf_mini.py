@@ -8,7 +8,7 @@ DEFAULT_CRITICAL_DISTANCE = 50
 class TFMiniPlus(RangeSensor):
     """Class for a specific range sensor : the TFMini Plus"""
 
-    def __init__(self, address, critical_distance=DEFAULT_CRITICAL_DISTANCE):
+    def __init__(self, address, angle=0, critical_distance=DEFAULT_CRITICAL_DISTANCE):
         """Constructor : can take as input the critical distance of the sensor under which we detect an obstacle"""
         RangeSensor.__init__(self, critical_distance)  # Calls the constructor of the parent class
         self._name = "Lidar"
