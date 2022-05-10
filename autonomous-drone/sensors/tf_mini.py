@@ -12,6 +12,7 @@ class TFMiniPlus(RangeSensor):
         """Constructor : can take as input the critical distance of the sensor under which we detect an obstacle"""
         RangeSensor.__init__(self, critical_distance)  # Calls the constructor of the parent class
         self._name = "Lidar"
+        self.angle = angle
         self._address = address
         self._time_between_readings = 0.02  # ask a reading every 20 ms
 
