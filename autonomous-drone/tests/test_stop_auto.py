@@ -4,7 +4,8 @@
 
 """
 Here, the drone has to regulate its speed
-to stop at 2 meters away from the wall. *
+to stop at 2 meters away from the wall
+using a PROPORTIONAL CORRECTOR
 """
 
 import sys
@@ -124,10 +125,6 @@ f.write("measured_distance \n")
 for t in list_measured_distance:
     f.write(str(t)+"\n")
 
-f.write("yaw \n")
-for t in list_yaw:
-    f.write(str(t)+"\n")
-
 
 """ -------- Plot of the logs -------- """
 fig, axes = plt.subplots(nrows=1, ncols=2)
@@ -147,9 +144,4 @@ axes[1].set_ylabel("Measured Distance")
 plt.title(title)
 plt.show()
 
-plt.plot(list_time,list_yaw)
-plt.xlabel("Time")
-plt.ylabel("Yaw")
-plt.title(title)
-plt.show()
 
