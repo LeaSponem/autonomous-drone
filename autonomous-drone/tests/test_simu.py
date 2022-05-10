@@ -17,12 +17,12 @@ connection_string = args.connect
 
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                     critical_distance_lidar=1)
+                     critical_distance_lidar=100)
 
-wall1 = WallObstacle(-10, 10, 20, 0)
-wall2 = WallObstacle(-10, 11, 20, 0)
-wall3 = WallObstacle(-10, 12, 20, 90)
-wall4 = WallObstacle(-10, -10, 20, 0)
+wall1 = WallObstacle(-1000, 1000, 2000, 0)
+wall2 = WallObstacle(-1000, 1100, 2000, 0)
+wall3 = WallObstacle(-1000, 1200, 2000, 90)
+wall4 = WallObstacle(-1000, -1000, 2000, 0)
 
 walls = [wall1, wall2, wall3, wall4]
 
