@@ -6,7 +6,7 @@ class DroneLidarSensors(object):
     Class of lidar sensors
     Used to deal with multiple sensors on the drone
     """
-    def __init__(self, lidar_address, lidar_angle, critical_distance_lidar=50):
+    def __init__(self, lidar_address, lidar_angle, critical_distance_lidar=1):
         self._lidar_number = len(lidar_angle)  # Number of lidar sensors
         self._critical_distance_lidar = critical_distance_lidar
         # Initialize a list with all the lidar sensors
@@ -26,7 +26,7 @@ class DroneLidarSensors(object):
 
 
 class ThreeLidarSensorsDetection(object):
-    def __init__(self, lidar_address=None, lidar_angle=[0], critical_distance_lidar=50):
+    def __init__(self, lidar_address=None, lidar_angle=[0], critical_distance_lidar=1):
         self._lidar_sensors = DroneLidarSensors(lidar_address, lidar_angle, critical_distance_lidar).lidar_sensors
         self._right_lidar = None
         self._left_lidar = None
@@ -63,7 +63,7 @@ class ThreeLidarSensorsDetection(object):
         return self._front_lidar.get_distance()
 
     def critical_distance_reached(self):
-        return self._front_lidar.critial_distance_reached()
+        return self._front_lidar.critical_distance_reached()
 
     def read_right_distance(self):
         self._right_lidar.read_distance()
