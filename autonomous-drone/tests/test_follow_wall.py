@@ -43,7 +43,7 @@ switch_obstacle = 9
 drone.launch_mission()
 obstacle_detected = False
 
-K = 0.001                    #Coefficient for the PID
+K = 0.001                  #Coefficient for the PID
 mission_time = 0           #Increment for the plot log
 Vx_ordered = 0             #Definition of Vx
 Vx_measured = 0
@@ -92,7 +92,7 @@ while drone.mission_running() and mission_time < time_length_simu:
 
     #Following a wall
     Vx_ordered = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
-    #Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
+    Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
     Vy = 0.5                                                    #Lateral speed is 0.5 m/s
     drone._send_ned_velocity(Vx_ordered, Vy, 0)
 
@@ -127,8 +127,10 @@ plt.ylabel("Measured Distance")
 plt.show()
 #plt.savefig("Measured_distance_log.png")
 
+"""
 plt.plot(list_time,list_yaw)
 plt.xlabel("Time")
 plt.ylabel("Yaw")
 plt.show()
 #plt.savefig("Yaw_log.png")
+"""
