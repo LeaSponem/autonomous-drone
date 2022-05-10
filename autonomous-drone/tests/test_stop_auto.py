@@ -21,7 +21,7 @@ import matplotlib.pyplot as plt
 
 " -------- Constants and Variables -------- "
 #For simulator only
-wall1 = WallObstacle(-1000, 5000, 2000, 0)
+wall1 = WallObstacle(-1000, 500, 2000, 0)
 walls = [wall1]
 
 mission_time = 0           #Increment for the plot log
@@ -30,8 +30,8 @@ V_measured = 0             #Velocity of the drone
 measured_distance = -1     #Data from the sensor
 yaw = 0
 
-K = 0.5                  #Coefficient for the PID
-target_distance = 2      #The drone must stop at this distance from the obstacle
+K = 0.0005                  #Coefficient for the PID
+target_distance = 200      #The drone must stop at this distance from the obstacle
 
 " -------- Initialization -------- "
 parser = argparse.ArgumentParser(description='commands')
