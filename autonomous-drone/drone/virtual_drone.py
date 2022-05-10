@@ -4,6 +4,7 @@ from inspection_drone import InspectionDrone
 from simulation_position import SimulationPosition
 sys.path.insert(0, '../sensors')
 from virtual_tf_mini import VirtualTFMiniPlus
+from virtual_drone_sensors import VirtualThreeLidarSensorsDetection
 
 
 class VirtualDrone(InspectionDrone):
@@ -11,9 +12,9 @@ class VirtualDrone(InspectionDrone):
     Specific class for a virtual drone used on a simulator
     Deprecated class from InspectionDrone with parameters and methods for virtual positions
     """
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, critical_distance_lidar=1):
-        InspectionDrone.__init__(self, connection_string, baudrate,
-                                 two_way_switches, three_way_switches, critical_distance_lidar=1)
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, lidar_angle, critical_distance_lidar=1):
+        InspectionDrone.__init__(self, connection_string, baudrate, two_way_switches,
+                                 three_way_switches, lidar_angle=lidar_angle, critical_distance_lidar=1)
         self._drone_x = 0
         self._drone_y = 0
         # GPS coordinates
@@ -23,7 +24,7 @@ class VirtualDrone(InspectionDrone):
         self._initial_angle = 90 + self._yaw
         # Init local frame for simulated positions
         self._local_frame = self._init_local_frame()
-        self._lidar = VirtualTFMiniPlus(critical_distance_lidar)
+        self._lidar = VirtualThreeLidarSensorsDetection(lidar_angle, critical_distance_lidar)
 
     def _init_local_frame(self):
         """
