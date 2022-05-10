@@ -13,6 +13,7 @@ import time
 import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
+sys.path.insert(0, '../tools')
 from virtual_drone import VirtualDrone
 from inspection_drone import InspectionDrone
 from wall import WallObstacle
@@ -36,14 +37,14 @@ measured_distance = -1     #Data from the sensor
 yaw = 0
 
 #PID Parameters
-Kp = 0.005                 #Coefficient for the P in PID
-Ki = 0 #.0005                 #Coefficient for the I in PID
-Kd = 0 #.0005                 #Coefficient for the D in PID
+Kp = 0.01                 #Coefficient for the P in PID
+Ki = 0.1                 #Coefficient for the I in PID
+Kd = 0.01                 #Coefficient for the D in PID
 target_distance = 200       #The drone must stop at this distance from the obstacle
 Vmax = 0.5              #m/s
 
 #PID
-pid_V = pid.pidTools()      #Declaration of our PID
+pid_V = pid.PidTools()      #Declaration of our PID
 pid_V.setPIDparams(Kp, Ki, Kd, Vmax)
 print(pid_V.getPIDParams())
 time.sleep(5)
