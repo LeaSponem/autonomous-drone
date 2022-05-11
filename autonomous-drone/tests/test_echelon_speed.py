@@ -1,6 +1,7 @@
 """
 @author: Clara
 @subject: Suivi de mur
+
 """
 import sys
 import time
@@ -43,22 +44,26 @@ switch_obstacle = 9
 drone.launch_mission()
 obstacle_detected = False
 
-K = 0.001                  #Coefficient for the PID
-mission_time = 0           #Increment for the plot log
-Vx_ordered = 0             #Definition of Vx
-Vx_measured = 0
-yaw = 0
-x = 0                       #Increment for Simulator use only
+" -------- Parameters for Automatic Speed Control -------- "
+K = 0.5                 #Coefficient for the PID
+V_targeted = 0.2           # m/s
 
-" -------- Definition of a log -------- "
-list_Vx_ordered = []
-list_Vx_measured = []
-list_measured_distance = []
-list_yaw = []
-list_time = []
+" -------- Variables for the log --------"
+mission_time = 0           #Increment for the plot log
+V_ordered = 0             #Definition of Vx
+V_measured = 0
+yaw = 0
+
+" -------- Definition of the log -------- "
+list_V_targeted = [V_targeted]
+#list_V_ordered = [V_ordered]
+list_V_measured = [V_measured]
+#list_yaw = []
+list_time = [0]
 
 " ------- Mission running -------- "
 time_0 = time.time()
+drone._send_ned_velocity(0, 0, 0)
 while drone.mission_running() and mission_time < time_length_simu:
     mission_time = time.time() - time_0
 
@@ -67,43 +72,27 @@ while drone.mission_running() and mission_time < time_length_simu:
     drone.update_switch_states()
     #drone.update_detection(use_lidar=True, debug=True)
 
-    """
-    # Following a wall mode IRL
+    """------ Automatic Speed Control ------
+    - V_targeted is the speed we want
+    - V_ordered is the speed we enter the drone so it goes at V_targeted
+    - V_measured is the real speed of the drone 
+    Update : this code is no longer useful, it's not pertinent to regulate the drone on its speed
+    
+    V_ordered = K * (V_targeted - V_measured)
 
-    #Testing if there is an obstacle
-    if drone.obstacle_detected() and not obstacle_detected:
-        drone.set_guided_mode()
-        print("Obstacle detected")
-        obstacle_detected = True
-        first_detection = True
-    if not drone.obstacle_detected() and obstacle_detected:
-        obstacle_detected = False
-        print("No obstacle")
-
-    measured_distance = drone.get_distance()
+    drone._send_ned_velocity(V_ordered, 0, 0)
     """
 
-    #Echelon
-    measured_distance = 500
-    #Rampe
-    #measured_distance = mission_time * 2
-    #Sinus
-    #measured_distance = target_distance + 200 * np.sin(mission_time * 0.1)
+    """------ Response to an echelon ------"""
+    drone._send_ned_velocity(V_targeted, 0, 0)
+    V_measured = drone.get_velocity()[0]
 
-    #Following a wall
-    Vx_ordered = K*(measured_distance - target_distance)      #Forward speed proportionnal to the distance with the wall
-    Vx_ordered = np.min([np.abs(Vx_ordered), 0.5])*np.sign(Vx_ordered)                    #Verify it doesn't exceed Vmax = 0.5 m/s
-    Vy = 0.5                                                    #Lateral speed is 0.5 m/s
-    drone._send_ned_velocity(Vx_ordered, Vy, 0)
+    """------ Updating the log ------"""
 
-    #Updating the log
-    Vx_measured = drone.get_velocity()[0]
-    yaw = drone.get_yaw()
     list_time.append(mission_time)
-    list_Vx_ordered.append(Vx_ordered)
-    list_Vx_measured.append(Vx_measured)
-    list_measured_distance.append(measured_distance)
-    list_yaw.append(yaw)
+    list_V_targeted.append(V_targeted)
+    #list_V_ordered.append(V_ordered)
+    list_V_measured.append(V_measured)
 
     time.sleep(0.1)
     #End of the while simulation
@@ -111,8 +100,9 @@ while drone.mission_running() and mission_time < time_length_simu:
 drone.vehicle.mode = VehicleMode("RTL")         #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
 
 """ -------- Plot of the logs -------- """
-plt.plot(list_time,list_Vx_ordered, label="Ordered")
-plt.plot(list_time,list_Vx_measured, label="Measured")
+plt.plot(list_time,list_V_targeted, label="Targeted")
+#plt.plot(list_time,list_V_ordered, label="Ordered")
+plt.plot(list_time,list_V_measured, label="Measured")
 plt.xlabel("Time")
 plt.ylabel("Speed on x")
 plt.legend()
@@ -120,12 +110,6 @@ title = "K=" + str(K)
 plt.title(title)
 plt.show()
 #plt.savefig("Vx_log.png")
-
-plt.plot(list_time,list_measured_distance)
-plt.xlabel("Time")
-plt.ylabel("Measured Distance")
-plt.show()
-#plt.savefig("Measured_distance_log.png")
 
 """
 plt.plot(list_time,list_yaw)

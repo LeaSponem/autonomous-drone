@@ -12,9 +12,9 @@ class VirtualDrone(InspectionDrone):
     Specific class for a virtual drone used on a simulator
     Deprecated class from InspectionDrone with parameters and methods for virtual positions
     """
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, lidar_angle, critical_distance_lidar=1):
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, lidar_angle, critical_distance_lidar=100):
         InspectionDrone.__init__(self, connection_string, baudrate, two_way_switches,
-                                 three_way_switches, lidar_angle=lidar_angle, critical_distance_lidar=1)
+                                 three_way_switches, lidar_angle=lidar_angle, critical_distance_lidar)
         self._drone_x = 0
         self._drone_y = 0
         # GPS coordinates
@@ -44,12 +44,12 @@ class VirtualDrone(InspectionDrone):
     def _update_virtual_position(self):
         """
         Convert the GPS coordinates to x and y coordinates relatively to the drone home position
-        Convert the coordinates in meters
+        Convert the coordinates in centimeters
         """
         self._update_location()
         self._drone_x, self._drone_y = self._local_frame.get_position(self._location)
-        self._drone_x *= 0.001
-        self._drone_y *= 0.001
+        self._drone_x *= 100
+        self._drone_y *= 100
 
     def get_angle(self):
         """Return the angle between the drone direction and the X axis"""

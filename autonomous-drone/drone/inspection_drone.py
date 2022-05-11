@@ -294,7 +294,7 @@ class InspectionDrone(object):
         self.vehicle.mode = VehicleMode("GUIDED")
 
     def set_flight_mode(self, flightmode):
-        self.vehicle.mode = flightmode
+        self.vehicle.mode = VehicleMode(flightmode)
 
     # Functions to access the drone last flight mode
     def get_last_flight_mode(self):
