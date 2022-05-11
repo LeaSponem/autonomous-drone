@@ -40,10 +40,10 @@ class ThreeLidarSensorsDetection(object):
             if lidar.angle == 0:
                 lidar.name = "Front lidar"
                 self._front_lidar = lidar
-            elif lidar.angle == 90:
+            elif lidar.angle == -90:
                 lidar.name = "Left lidar"
                 self._left_lidar = lidar
-            elif lidar.angle == -90:
+            elif lidar.angle == 90:
                 lidar.name = "Right lidar"
                 self._right_lidar = lidar
 
