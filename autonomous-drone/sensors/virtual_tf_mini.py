@@ -1,8 +1,8 @@
 from range_sensors import RangeSensor
 import numpy as np
 
-DEFAULT_CRITICAL_DISTANCE = 100
-DEFAULT_DISTANCE_DETECTION = 500
+DEFAULT_CRITICAL_DISTANCE = 1
+DEFAULT_DISTANCE_DETECTION = 5
 
 
 class VirtualTFMiniPlus(RangeSensor):
@@ -57,6 +57,7 @@ class VirtualTFMiniPlus(RangeSensor):
         """
         Compute the coordinates of the max range point in the drone current direction
         """
+        angle_drone = (np.pi/180)*angle_drone
         x_max_range = x_drone + self._distance_detection * np.cos(angle_drone)
         y_max_range = y_drone + self._distance_detection * np.sin(angle_drone)
         return x_max_range, y_max_range
@@ -67,7 +68,9 @@ class VirtualTFMiniPlus(RangeSensor):
         Return True if the intersection point is in front of the drone, False otherwise
         """
         x_max_range, y_max_range = self._get_max_range_coordinates(x_drone, y_drone, angle_drone)
-        if np.sqrt((x_max_range - x_intersection)**2 + (y_max_range - y_intersection)**2) < self._distance_detection:
+        drone_vector = np.array([x_max_range-x_drone, y_max_range-y_drone])
+        obstacle_vector = np.array([x_intersection-x_drone, y_intersection-y_drone])
+        if np.dot(drone_vector, obstacle_vector) > 0:
             return True
         return False
 
