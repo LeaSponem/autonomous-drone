@@ -10,7 +10,7 @@ class VirtualTFMiniPlus(RangeSensor):
     Class for a specific range sensor : the TFMini Plus
     For simulator use only
     """
-    def __init__(self, critical_distance=DEFAULT_CRITICAL_DISTANCE, distance_detection=DEFAULT_DISTANCE_DETECTION):
+    def __init__(self, angle, critical_distance=DEFAULT_CRITICAL_DISTANCE, distance_detection=DEFAULT_DISTANCE_DETECTION):
         """
         Constructor
         Inputs :
@@ -20,6 +20,7 @@ class VirtualTFMiniPlus(RangeSensor):
         # Calls the constructor of the parent class
         RangeSensor.__init__(self, critical_distance)
         self._name = "Lidar"
+        self.angle = angle
         # Ask a reading every 20 ms
         self._time_between_readings = 0.02
         self._distance_detection = distance_detection
@@ -56,6 +57,7 @@ class VirtualTFMiniPlus(RangeSensor):
         """
         Compute the coordinates of the max range point in the drone current direction
         """
+        angle_drone = (np.pi/180)*angle_drone
         x_max_range = x_drone + self._distance_detection * np.cos(angle_drone)
         y_max_range = y_drone + self._distance_detection * np.sin(angle_drone)
         return x_max_range, y_max_range
@@ -66,7 +68,9 @@ class VirtualTFMiniPlus(RangeSensor):
         Return True if the intersection point is in front of the drone, False otherwise
         """
         x_max_range, y_max_range = self._get_max_range_coordinates(x_drone, y_drone, angle_drone)
-        if np.sqrt((x_max_range - x_intersection)**2 + (y_max_range - y_intersection)**2) < self._distance_detection:
+        drone_vector = np.array([x_max_range-x_drone, y_max_range-y_drone])
+        obstacle_vector = np.array([x_intersection-x_drone, y_intersection-y_drone])
+        if np.dot(drone_vector, obstacle_vector) > 0:
             return True
         return False
 

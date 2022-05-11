@@ -5,7 +5,7 @@ from dronekit import connect, VehicleMode
 from pymavlink import mavutil
 from rc_switch import Switch
 sys.path.insert(0, '../sensors')
-from tf_mini import TFMiniPlus
+from drone_sensors import ThreeLidarSensorsDetection
 
 
 class InspectionDrone(object):
@@ -14,7 +14,7 @@ class InspectionDrone(object):
     Relies on the dronekit vehicle class
     """
     def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
-                 lidar_address=None, critical_distance_lidar=300):
+                 lidar_address=None, lidar_angle=None, critical_distance_lidar=300):
         """
         Constructor: initialize a vehicle instance
         Inputs:
@@ -80,7 +80,7 @@ class InspectionDrone(object):
         self._rotation_angle = 0
         self._yaw_before_rotation = 0
         self._yaw = 0
-        self._lidar = TFMiniPlus(lidar_address, critical_distance_lidar)
+        self._lidar = ThreeLidarSensorsDetection(lidar_address, lidar_angle, critical_distance_lidar)
 
     def update_switch_states(self):
         """
@@ -127,7 +127,7 @@ class InspectionDrone(object):
         An interval is fixed between two lidar readings
         Return True if the time since the last reading is superior to this interval
         """
-        return self._lidar.lidar_reading()
+        return self._lidar.get_front_lidar().lidar_reading()
 
     def obstacle_detected(self):
         return self._obstacle_detected
@@ -317,10 +317,11 @@ class InspectionDrone(object):
         return self._elapsed_time_mission
 
     def get_distance(self):
-        return self._lidar.get_distance()
+        return self._lidar.get_front_lidar().get_distance()
 
     def get_velocity(self):
         return self.vehicle.velocity
+
     def get_yaw(self):
         return self._yaw
       
