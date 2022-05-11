@@ -181,7 +181,6 @@ class InspectionDrone(object):
         # Check that the drone isn't rotating
         if not self._is_rotating():
             self._send_ned_velocity(velocity, 0, 0)
-            print("moving forward")
 
     def send_mavlink_go_left(self, velocity):
         """
