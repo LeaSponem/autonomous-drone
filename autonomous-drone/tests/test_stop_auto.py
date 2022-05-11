@@ -13,17 +13,16 @@ import time
 import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
-from virtual_drone import VirtualDrone
+#from virtual_drone import VirtualDrone
 from inspection_drone import InspectionDrone
-from wall import WallObstacle
-from dronekit import VehicleMode
+#from wall import WallObstacle
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 " -------- Constants and Variables -------- "
 #For simulator only
-wall1 = WallObstacle(-1000, 500, 2000, 0)
-walls = [wall1]
+#wall1 = WallObstacle(-1000, 500, 2000, 0)          #For simu only
+#walls = [wall1]                                    #For simu only
 
 mission_time = 0           #Increment for the plot log
 V_command = 0              #Velocity to command the drone
@@ -31,7 +30,7 @@ V_measured = 0             #Velocity of the drone
 measured_distance = -1     #Data from the sensor
 yaw = 0
 
-K = 0.0005                  #Coefficient for the PID
+K = 0.005                  #Coefficient for the PID
 target_distance = 200      #The drone must stop at this distance from the obstacle
 
 " -------- Initialization -------- "
@@ -40,7 +39,7 @@ parser.add_argument('--connect')
 args = parser.parse_args()
 
 connection_string = args.connect
-
+"""
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                      critical_distance_lidar=target_distance*1.5)
@@ -50,7 +49,7 @@ drone = InspectionDrone('/dev/serial0', baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                         lidar_address=0x10, critical_distance_lidar=target_distance)
-"""
+
 " -------- Definition of a log -------- "
 list_V_command = []
 list_V_measured = []
@@ -59,7 +58,7 @@ list_yaw = []
 list_time = []
 
 " -------- Starting the mission -------- "
-drone.arm_and_takeoff(2)
+#drone.arm_and_takeoff(2)                       #For simu only
 drone.launch_mission()
 
 time_0 = time.time()
@@ -70,8 +69,8 @@ while drone.mission_running():
 
     if drone.do_lidar_reading():  # ask a reading every 20 ms
         print("update detection")
-        drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure SIMU
-        #drone.update_detection(use_lidar=True, debug=True)  # distance measure IRL
+        #drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure SIMU
+        drone.update_detection(use_lidar=True, debug=True)  # distance measure IRL
         measured_distance = drone.get_distance()
 
     if drone.obstacle_detected():
@@ -95,15 +94,14 @@ while drone.mission_running():
     list_yaw.append(yaw)
 
     drone.send_mavlink_go_forward(V_command)
+    #drone._send_ned_velocity(V_command, 0.5, 0)
 
     if mission_time > 60 :
-            #or np.abs(measured_distance) < 0.05:
         drone.abort_mission()
 
     time.sleep(0.1)
-    #measured_distance = -1
 
-drone.set_flight_mode("RTL")       #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
+#drone.set_flight_mode("RTL")       #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
 drone.set_flight_mode("POSHOLD")
 
 """ -------- Save of the logs -------- """
@@ -127,6 +125,7 @@ for t in list_measured_distance:
 
 
 """ -------- Plot of the logs -------- """
+"""
 fig, axes = plt.subplots(nrows=1, ncols=2)
 title = "K=" + str(K)
 
@@ -143,5 +142,6 @@ axes[1].set_ylabel("Measured Distance")
 
 plt.title(title)
 plt.show()
+"""
 
 
