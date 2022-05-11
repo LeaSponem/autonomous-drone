@@ -56,6 +56,13 @@ class VirtualDrone(InspectionDrone):
         self._update_yaw()
         return self._initial_angle - self._yaw
 
+    def get_sensor_angle(self, sensor_angle):
+        """Return the angle between the sensor axis and the X axis"""
+        angle = self.get_angle() - sensor_angle
+        if angle > 360:
+            angle -= 360
+        return angle
+
     def get_virtual_position(self):
         """
         Update and return the drone virtual position
@@ -76,6 +83,27 @@ class VirtualDrone(InspectionDrone):
             self._obstacle_detected = True
         else:
             self._obstacle_detected = False
+
+    def update_side_detection(self, debug=False, walls=None):
+        """
+        Read the distance returned by the sensor and return if an obstacle is detected
+        """
+        self._update_virtual_position()
+        if self._lidar.get_left_lidar() is not None:
+            if self._lidar.read_left_distance(self._drone_x, self._drone_y, self.get_sensor_angle(-90), walls) and debug:
+                print("Left lidar range:" + str(self._lidar.get_left_lidar().get_distance()))
+            if self._lidar.get_left_lidar().critical_distance_reached():
+                self._lidar._obstacle_detected_left = True
+            else:
+                self._lidar._obstacle_detected_left = False
+
+        if self._lidar.get_right_lidar() is not None:
+            if self._lidar.get_right_lidar() is not None and self._lidar.read_right_distance(self._drone_x, self._drone_y, self.get_sensor_angle(90), walls) and debug:
+                print("Right lidar range:" + str(self._lidar.get_right_lidar().get_distance()))
+            if self._lidar.get_right_lidar().critical_distance_reached():
+                self._lidar._obstacle_detected_right = True
+            else:
+                self._lidar._obstacle_detected_right = False
 
     def arm_and_takeoff(self, tgt_altitude):
         """
