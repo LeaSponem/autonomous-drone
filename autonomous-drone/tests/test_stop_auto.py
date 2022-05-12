@@ -17,7 +17,7 @@ from inspection_drone import InspectionDrone
 from wall import WallObstacle
 from dronekit import VehicleMode
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 
 " -------- Constants and Variables -------- "
 #For simulator only
@@ -30,8 +30,8 @@ V_measured = 0             #Velocity of the drone
 measured_distance = -1     #Data from the sensor
 yaw = 0
 
-K = 0.05                  #Coefficient for the PID
-target_distance = 200      #The drone must stop at this distance from the obstacle
+K = 0.5                  #Coefficient for the PID
+target_distance = 2      #The drone must stop at this distance from the obstacle
 
 " -------- Initialization -------- "
 parser = argparse.ArgumentParser(description='commands')
@@ -42,7 +42,7 @@ connection_string = args.connect
 
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                     critical_distance_lidar=target_distance)
+                     critical_distance_lidar=target_distance*1.5)
 
 """
 drone = InspectionDrone('/dev/serial0', baudrate=115200,
@@ -69,14 +69,16 @@ while drone.mission_running():
 
     if drone.do_lidar_reading():  # ask a reading every 20 ms
         print("update detection")
-        drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
-        #drone.update_detection(use_lidar=True, debug=True)  # distance measure
+        drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure SIMU
+        #drone.update_detection(use_lidar=True, debug=True)  # distance measure IRL
         measured_distance = drone.get_distance()
 
     if drone.obstacle_detected():
         print("Obstacle detected")
         " --- Automatic Stop Control --- "
         V_command = K * (measured_distance - target_distance)
+        V_command = np.min([np.abs(V_command), 0.5]) * np.sign(V_command)  # Verify it doesn't exceed Vmax = 0.5 m/s
+
 
     else :
         print("no obstacle detected")
@@ -93,14 +95,14 @@ while drone.mission_running():
 
     drone.send_mavlink_go_forward(V_command)
 
-    if mission_time > 120 :
+    if mission_time > 60 :
             #or np.abs(measured_distance) < 0.05:
         drone.abort_mission()
 
     time.sleep(0.1)
     #measured_distance = -1
 
-#drone.set_flight_mode("RTL")       #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
+drone.set_flight_mode("RTL")       #REMOVE THIS LINE IF IRL, FOR SIMULATOR ONLY
 drone.set_flight_mode("POSHOLD")
 
 """ -------- Save of the logs -------- """
@@ -127,7 +129,7 @@ for t in list_yaw:
     f.write(str(t)+"\n")
 
 
-""" -------- Plot of the logs -------- 
+""" -------- Plot of the logs -------- """
 fig, axes = plt.subplots(nrows=1, ncols=2)
 title = "K=" + str(K)
 
@@ -150,4 +152,4 @@ plt.xlabel("Time")
 plt.ylabel("Yaw")
 plt.title(title)
 plt.show()
-"""
+
