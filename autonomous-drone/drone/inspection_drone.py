@@ -147,7 +147,7 @@ class InspectionDrone(object):
         An interval is fixed between two lidar readings
         Return True if the time since the last reading is superior to this interval
         """
-        return self._lidar.get_front_lidar().lidar_reading()
+        return self._lidar.lidar_reading()
 
     def obstacle_detected(self):
         return self._obstacle_detected
@@ -337,7 +337,7 @@ class InspectionDrone(object):
         return self._elapsed_time_mission
 
     def get_distance(self):
-        return self._lidar.get_front_lidar().get_distance()
+        return self._lidar.get_distance()
 
     def get_velocity(self):
         return self.vehicle.velocity
