@@ -8,6 +8,10 @@ sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
 from virtual_drone import VirtualDrone
 from wall import WallObstacle
+from inspection_drone import InspectionDrone
+
+
+simulation = False
 
 parser = argparse.ArgumentParser(description='commands')
 parser.add_argument('--connect')
@@ -15,30 +19,39 @@ args = parser.parse_args()
 
 connection_string = args.connect
 
-drone = VirtualDrone(connection_string, baudrate=115200,
-                     two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                     lidar_angle=[0, -90], critical_distance_lidar=1)
+if connection_string is None:
+    connection_string = '/dev/serial0'
 
+if simulation:
+    drone = VirtualDrone(connection_string, baudrate=115200,
+                         two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
+                         lidar_angle=[0, 90, -90], critical_distance_lidar=100)
+else:
+    drone = InspectionDrone(connection_string, baudrate=115200,
+                            two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
+                            lidar_angle=[0, 90, -90], lidar_address=[],
+                            critical_distance_lidar=100)
 
 wall1 = WallObstacle(-10, 10, 20, 0)
 wall2 = WallObstacle(-2, 5, 20, 90)
 wall3 = WallObstacle(-1000, 1200, 2000, 90)
 wall4 = WallObstacle(-1000, -1000, 2000, 0)
-
 walls = [wall2]
 
-drone.arm_and_takeoff(2)
 drone.launch_mission()
+if simulation:
+    drone.arm_and_takeoff(2)
 
 while drone.mission_running():
     drone.update_time()  # update time since connexion and mission's start
+    drone.update_switch_states()
     if drone.do_lidar_reading():  # ask a reading every 20 ms
-        # drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
-        print("update sensor")
-        drone.update_side_detection(debug=True, walls=walls)
-    if drone._lidar.obstacle_detected_left():
-        print("Obstacle detected")
+        if simulation:
+            drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
+            drone.update_side_detection(debug=True, walls=walls)
+        else:
+            drone.update_detection(use_lidar=True, debug=True)  # distance measure
+            drone.update_side_detection(use_lidar=True, debug=True)
     if drone.time_since_last_obstacle_detected() > 60:
         drone.abort_mission()
-    drone.send_mavlink_go_forward(0.5)
     time.sleep(0.1)
