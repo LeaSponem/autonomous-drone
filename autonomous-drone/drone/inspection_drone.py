@@ -107,7 +107,7 @@ class InspectionDrone(object):
         An obstacle is detected if the distance read is inferior to the critical distance
         """
         # Debug mode: read and print distance from sensor
-        if self._lidar.read_distance() and debug:
+        if use_lidar and self._lidar.read_distance() and debug:
             print("Lidar range:" + str(self._lidar.get_distance()))
         if use_lidar and self._lidar.critical_distance_reached():
             if self.obstacle_detected():
@@ -115,6 +115,26 @@ class InspectionDrone(object):
             self._obstacle_detected = True
         else:
             self._obstacle_detected = False
+
+    def update_side_detection(self, use_lidar=True, debug=False):
+        """
+        Read the distance returned by the sensor and return if an obstacle is detected
+        """
+        if use_lidar and self._lidar.get_left_lidar() is not None:
+            if self._lidar.read_left_distance() and debug:
+                print("Left lidar range:" + str(self._lidar.get_left_lidar().get_distance()))
+            if self._lidar.get_left_lidar().critical_distance_reached():
+                self._lidar._obstacle_detected_left = True
+            else:
+                self._lidar._obstacle_detected_left = False
+
+        if use_lidar and self._lidar.get_right_lidar() is not None:
+            if self._lidar.get_right_lidar() is not None and self._lidar.read_right_distance() and debug:
+                print("Right lidar range:" + str(self._lidar.get_right_lidar().get_distance()))
+            if self._lidar.get_right_lidar().critical_distance_reached():
+                self._lidar._obstacle_detected_right = True
+            else:
+                self._lidar._obstacle_detected_right = False
 
     def time_since_last_obstacle_detected(self):
         if self._time_last_obstacle_detected is None or self.obstacle_detected():
