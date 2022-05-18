@@ -26,7 +26,7 @@ class DroneLidarSensors(object):
 
 
 class ThreeLidarSensorsDetection(object):
-    def __init__(self, lidar_address=None, lidar_angle=[0], critical_distance_lidar=1):
+    def __init__(self, lidar_address=None, lidar_angle=[0], critical_distance_lidar=100):
         self._lidar_sensors = DroneLidarSensors(lidar_address, lidar_angle, critical_distance_lidar).lidar_sensors
         self._right_lidar = None
         self._left_lidar = None
@@ -79,4 +79,3 @@ class ThreeLidarSensorsDetection(object):
 
     def lidar_reading(self):
         return self._front_lidar.lidar_reading()
-
