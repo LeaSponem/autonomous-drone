@@ -11,7 +11,7 @@ from wall import WallObstacle
 from inspection_drone import InspectionDrone
 
 
-simulation = False
+simulation = True
 
 parser = argparse.ArgumentParser(description='commands')
 parser.add_argument('--connect')
@@ -26,17 +26,20 @@ if simulation:
     drone = VirtualDrone(connection_string, baudrate=115200,
                          two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                          lidar_angle=[0, 90, -90], critical_distance_lidar=100)
+    first_detection = True
+
 else:
     drone = InspectionDrone(connection_string, baudrate=115200,
                             two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                            lidar_angle=[0, 90, -90], lidar_address=[],
-                            critical_distance_lidar=100)
+                            lidar_angle=[0, 90, -90], lidar_address=[0x10, 0x12, 0x11],
+                            critical_distance_lidar=200)
 
-wall1 = WallObstacle(-10, 10, 20, 0)
-wall2 = WallObstacle(-2, 5, 20, 90)
+
+wall1 = WallObstacle(-1000, 1000, 2000, 0)
+wall2 = WallObstacle(-200, 500, 2000, 90)
 wall3 = WallObstacle(-1000, 1200, 2000, 90)
 wall4 = WallObstacle(-1000, -1000, 2000, 0)
-walls = [wall2]
+walls = [wall1]
 
 drone.launch_mission()
 if simulation:
@@ -50,8 +53,28 @@ while drone.mission_running():
             drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
             drone.update_side_detection(debug=True, walls=walls)
         else:
-            drone.update_detection(use_lidar=True, debug=True)  # distance measure
-            drone.update_side_detection(use_lidar=True, debug=True)
+            drone.update_detection(use_lidar=True, debug=False)  # distance measure
+            drone.update_side_detection(use_lidar=True, debug=False)
+    if drone.obstacle_detected() and drone.is_in_auto_mode() and not simulation:
+        drone.set_guided_mode()
+        drone.send_mavlink_stay_stationary()
+    if drone.obstacle_detected and first_detection and simulation:
+        drone.set_guided_mode()
+        drone.send_mavlink_stay_stationary()
+        first_detection = False
+    if drone.obstacle_detected() and drone.is_in_guided_mode():
+        if not drone._lidar.obstacle_detected_left():
+            drone.send_mavlink_go_left(0.5)
+        elif not drone._lidar.obstacle_detected_right():
+            drone.send_mavlink_go_right(0.5)
+    if not drone.obstacle_detected() and drone.is_in_guided_mode()\
+            and drone.time_since_last_obstacle_detected()>2 and not simulation:
+        drone.set_auto_mode()
+    if not drone.obstacle_detected() and drone.is_in_guided_mode() \
+            and drone.time_since_last_obstacle_detected() > 2 and simulation:
+        first_detection = True
+    if not drone.obstacle_detected() and first_detection:
+        drone.send_mavlink_go_forward(0.5)
     if drone.time_since_last_obstacle_detected() > 60:
         drone.abort_mission()
     time.sleep(0.1)
