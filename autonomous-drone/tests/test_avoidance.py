@@ -1,6 +1,6 @@
 # dronekit-sitl copter-3.3 --home=48.8411292,2.5879308,584,353
 # mavproxy.exe --master tcp:127.0.0.1:5760 --out udp:127.0.0.1:14550 --out udp:127.0.0.1:14551
-# python test_three_sensors_detection.py --connect udp:127.0.0.1:14551
+# python test_avoidance.py --connect udp:127.0.0.1:14551
 import sys
 import time
 import argparse
@@ -23,7 +23,7 @@ if connection_string is None:
     connection_string = '/dev/serial0'
 
 if simulation:
-    drone = VirtualDrone(connection_string, baudrate=115200,
+    drone = VirtualDrone(connection_string=connection_string, baudrate=115200,
                          two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                          lidar_angle=[0, 90, -90], critical_distance_lidar=100)
     first_detection = True
@@ -58,7 +58,8 @@ while drone.mission_running():
     if drone.obstacle_detected() and drone.is_in_auto_mode() and not simulation:
         drone.set_guided_mode()
         drone.send_mavlink_stay_stationary()
-    if drone.obstacle_detected and first_detection and simulation:
+    if drone.obstacle_detected() and first_detection and simulation:
+        print("Obstacle detected")
         drone.set_guided_mode()
         drone.send_mavlink_stay_stationary()
         first_detection = False
