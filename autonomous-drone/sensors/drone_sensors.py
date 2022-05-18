@@ -34,6 +34,8 @@ class ThreeLidarSensorsDetection(object):
         self._sort_sensors()
         self._obstacle_detected_right = False
         self._obstacle_detected_left = False
+        self.go_right = True
+        self.go_left = True
 
     def _sort_sensors(self):
         for lidar in self._lidar_sensors:
@@ -79,3 +81,13 @@ class ThreeLidarSensorsDetection(object):
 
     def lidar_reading(self):
         return self._front_lidar.lidar_reading()
+
+    def update_path(self, obstacle_detected):
+        if obstacle_detected:
+            if self._obstacle_detected_left:
+                self.go_left = False
+            if self._obstacle_detected_right:
+                self.go_right = False
+        else:
+            self.go_left = True
+            self.go_right = True
