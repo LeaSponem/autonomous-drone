@@ -36,10 +36,10 @@ else:
 
 
 wall1 = WallObstacle(-1000, 1000, 2000, 0)
-wall2 = WallObstacle(-200, 500, 2000, 90)
+wall2 = WallObstacle(-300, 500, 5000, 90)
 wall3 = WallObstacle(-1000, 1200, 2000, 90)
 wall4 = WallObstacle(-1000, -1000, 2000, 0)
-walls = [wall1]
+walls = [wall1, wall2]
 
 drone.launch_mission()
 if simulation:
@@ -64,16 +64,19 @@ while drone.mission_running():
         drone.send_mavlink_stay_stationary()
         first_detection = False
     if drone.obstacle_detected() and drone.is_in_guided_mode():
-        if not drone._lidar.obstacle_detected_left():
+        drone.lidar.update_path(drone.obstacle_detected())
+        if drone.lidar.go_left:
             drone.send_mavlink_go_left(0.5)
-        elif not drone._lidar.obstacle_detected_right():
+        elif drone.lidar.go_right:
             drone.send_mavlink_go_right(0.5)
     if not drone.obstacle_detected() and drone.is_in_guided_mode()\
             and drone.time_since_last_obstacle_detected()>2 and not simulation:
         drone.set_auto_mode()
+        drone.lidar.update_path(drone.obstacle_detected())
     if not drone.obstacle_detected() and drone.is_in_guided_mode() \
             and drone.time_since_last_obstacle_detected() > 2 and simulation:
         first_detection = True
+        drone.lidar.update_path(drone.obstacle_detected())
     if not drone.obstacle_detected() and first_detection:
         drone.send_mavlink_go_forward(0.5)
     if drone.time_since_last_obstacle_detected() > 60:
