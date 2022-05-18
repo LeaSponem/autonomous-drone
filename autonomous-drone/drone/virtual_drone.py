@@ -24,7 +24,7 @@ class VirtualDrone(InspectionDrone):
         self._initial_angle = 90 + self._yaw
         # Init local frame for simulated positions
         self._local_frame = self._init_local_frame()
-        self._lidar = VirtualThreeLidarSensorsDetection(lidar_angle, critical_distance_lidar)
+        self.lidar = VirtualThreeLidarSensorsDetection(lidar_angle, critical_distance_lidar)
 
     def _init_local_frame(self):
         """
@@ -75,9 +75,9 @@ class VirtualDrone(InspectionDrone):
         Read the distance returned by the sensor and return if an obstacle is detected
         """
         self._update_virtual_position()
-        if self._lidar.read_distance(self._drone_x, self._drone_y, self.get_angle(), walls) and debug:
-            print("Lidar range:" + str(self._lidar.get_distance()))
-        if use_lidar and self._lidar.critical_distance_reached():
+        if self.lidar.read_distance(self._drone_x, self._drone_y, self.get_angle(), walls) and debug:
+            print("Lidar range:" + str(self.lidar.get_distance()))
+        if use_lidar and self.lidar.critical_distance_reached():
             if self.obstacle_detected():
                 self._time_last_obstacle_detected = time.time()
             self._obstacle_detected = True
@@ -89,21 +89,21 @@ class VirtualDrone(InspectionDrone):
         Read the distance returned by the sensor and return if an obstacle is detected
         """
         self._update_virtual_position()
-        if self._lidar.get_left_lidar() is not None:
-            if self._lidar.read_left_distance(self._drone_x, self._drone_y, self.get_sensor_angle(-90), walls) and debug:
-                print("Left lidar range:" + str(self._lidar.get_left_lidar().get_distance()))
-            if self._lidar.get_left_lidar().critical_distance_reached():
-                self._lidar._obstacle_detected_left = True
+        if self.lidar.get_left_lidar() is not None:
+            if self.lidar.read_left_distance(self._drone_x, self._drone_y, self.get_sensor_angle(-90), walls) and debug:
+                print("Left lidar range:" + str(self.lidar.get_left_lidar().get_distance()))
+            if self.lidar.get_left_lidar().critical_distance_reached():
+                self.lidar._obstacle_detected_left = True
             else:
-                self._lidar._obstacle_detected_left = False
+                self.lidar._obstacle_detected_left = False
 
-        if self._lidar.get_right_lidar() is not None:
-            if self._lidar.get_right_lidar() is not None and self._lidar.read_right_distance(self._drone_x, self._drone_y, self.get_sensor_angle(90), walls) and debug:
-                print("Right lidar range:" + str(self._lidar.get_right_lidar().get_distance()))
-            if self._lidar.get_right_lidar().critical_distance_reached():
-                self._lidar._obstacle_detected_right = True
+        if self.lidar.get_right_lidar() is not None:
+            if self.lidar.get_right_lidar() is not None and self.lidar.read_right_distance(self._drone_x, self._drone_y, self.get_sensor_angle(90), walls) and debug:
+                print("Right lidar range:" + str(self.lidar.get_right_lidar().get_distance()))
+            if self.lidar.get_right_lidar().critical_distance_reached():
+                self.lidar._obstacle_detected_right = True
             else:
-                self._lidar._obstacle_detected_right = False
+                self.lidar._obstacle_detected_right = False
 
     def arm_and_takeoff(self, tgt_altitude):
         """
