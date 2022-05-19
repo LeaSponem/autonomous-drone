@@ -14,11 +14,11 @@ import argparse
 sys.path.insert(0, '../drone')
 sys.path.insert(0, '../obstacles')
 sys.path.insert(0, '../tools')
-#from virtual_drone import VirtualDrone
+from virtual_drone import VirtualDrone
 from inspection_drone import InspectionDrone
 #from wall import WallObstacle
 import numpy as np
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import pid_tools as pid
 
 " -------- Constants and Variables -------- "
@@ -31,20 +31,26 @@ sample_time = 0.1
 #Variables
 mission_time = 0           #Increment for the plot log
 V_command = 0              #Velocity to command the drone
+VcP = 0                    #Command Velocity from the PID
+VcI = 0
+VcD = 0
 V_measured = 0             #Velocity of the drone
 measured_distance = -1     #Data from the sensor
 yaw = 0
 
+iteration_PID_start = 0
+
 #PID Parameters
-Kp = 0.005                 #Coefficient for the P in PID
-Ki = 0.005                 #Coefficient for the I in PID
-Kd = 0.005                #Coefficient for the D in PID
-target_distance = 200       #The drone must stop at this distance from the obstacle
-Vmax = 0.5              #m/s
+Kp = 0.005                  #Coefficient for the P in PID
+Ki = 0                      #Coefficient for the I in PID
+Kd = 0                      #Coefficient for the D in PID
+target_distance = 200       #The drone must stop at this distance from the obstacle, in cm
+Vmax = 0.5                  #Maximum authorized speed in m/s
 
 #PID
-pid_V = pid.PidTools()      #Declaration of our PID
+pid_V = pid.PidTools()                  #Declaration of our PID
 pid_V.setPIDparams(Kp, Ki, Kd, Vmax)
+
 print(pid_V.getPIDParams())
 time.sleep(5)
 
@@ -55,7 +61,7 @@ args = parser.parse_args()
 
 connection_string = args.connect
 """
-drone = VirtualDrone(connection_string, baudrate=115200,
+drone = VirtualDrone(connection_string, lidar_angle=[0], baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                      critical_distance_lidar=target_distance*1.5)
 
@@ -63,7 +69,7 @@ drone = VirtualDrone(connection_string, baudrate=115200,
 drone = InspectionDrone('/dev/serial0', baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                        lidar_address=0x10, critical_distance_lidar=target_distance)
+                        lidar_address=[0x10], critical_distance_lidar=target_distance)
 
 " -------- Definition of a log -------- "
 list_V_command = []
@@ -71,6 +77,9 @@ list_V_measured = []
 list_measured_distance = []
 list_yaw = []
 list_time = []
+list_VcP = []
+list_VcI = []
+list_VcD = []
 
 " -------- Starting the mission -------- "
 #drone.arm_and_takeoff(2)                       #For simu only
@@ -79,23 +88,25 @@ drone.launch_mission()
 time_0 = time.time()
 
 while drone.mission_running():
-    drone.update_time()  # update time since connexion and mission's start
-    mission_time = time.time() - time_0     #Time used for logs
+    drone.update_time()                                                     # update time since connexion and mission's start
+    mission_time = time.time() - time_0                                     #Time used for logs
 
-    if drone.do_lidar_reading():  # ask a reading every 20 ms
-        print("update detection")
-        #drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure SIMU
-        drone.update_detection(use_lidar=True, debug=True)  # distance measure IRL
+    if drone.do_lidar_reading():                                            # ask a reading every 20 ms
+        #drone.update_detection(use_lidar=True, debug=True, walls=walls)    # distance measure SIMU
+        drone.update_detection(use_lidar=True, debug=True)                  # distance measure IRL
         measured_distance = drone.get_distance()
 
     if drone.obstacle_detected():
-        print("Obstacle detected")
+        if iteration_PID_start == 0:
+            iteration_PID_start = len(list_time)
         " --- Automatic Stop Control --- "
         distance_error = measured_distance - target_distance
         V_command = pid_V.computeCommand(distance_error,sample_time)
+        VcP = pid_V.getPSignal()
+        VcI = pid_V.getISignal()
+        VcD = pid_V.getDSignal()
 
     else :
-        print("no obstacle detected")
         V_command = 0.5
 
     " --- Log Update --- "
@@ -106,6 +117,9 @@ while drone.mission_running():
     list_V_measured.append(V_measured)
     list_measured_distance.append(measured_distance)
     list_yaw.append(yaw)
+    list_VcP.append(VcP)
+    list_VcI.append(VcI)
+    list_VcD.append(VcD)
 
     drone.send_mavlink_go_forward(V_command)
     # drone._send_ned_velocity(V_command, 0.5, 0)
@@ -120,6 +134,7 @@ while drone.mission_running():
 drone.set_flight_mode("POSHOLD")
 
 """ -------- Save of the logs -------- """
+
 name = "log" + str(time.time())+ ".txt"
 f = open(name,"w")
 f.write("Time \n")
@@ -136,6 +151,18 @@ for t in list_V_measured:
 
 f.write("measured_distance \n")
 for t in list_measured_distance:
+    f.write(str(t)+"\n")
+
+f.write("Vcp \n")
+for t in list_VcP:
+    f.write(str(t)+"\n")
+
+f.write("Vci \n")
+for t in list_VcI:
+    f.write(str(t)+"\n")
+
+f.write("Vcd \n")
+for t in list_VcD:
     f.write(str(t)+"\n")
 
 """ -------- Plot of the logs -------- """
@@ -155,6 +182,15 @@ axes[1].set_xlabel("Time")
 axes[1].set_ylabel("Measured Distance")
 
 plt.title(title)
+plt.show()
+
+plt.plot(list_time[iteration_PID_start:],list_V_command[iteration_PID_start:], label='Command')
+plt.plot(list_time[iteration_PID_start:],list_VcP[iteration_PID_start:], label='Kp='+str(Kp))
+plt.plot(list_time[iteration_PID_start:],list_VcI[iteration_PID_start:], label='Ki='+str(Ki))
+plt.plot(list_time[iteration_PID_start:],list_VcD[iteration_PID_start:], label='Kd='+str(Kd))
+plt.title('Influence des correcteurs du PID')
+plt.legend()
+plt.axes()
 plt.show()
 """
 
