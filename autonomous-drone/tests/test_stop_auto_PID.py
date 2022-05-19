@@ -18,7 +18,7 @@ from virtual_drone import VirtualDrone
 from inspection_drone import InspectionDrone
 #from wall import WallObstacle
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import pid_tools as pid
 
 " -------- Constants and Variables -------- "
