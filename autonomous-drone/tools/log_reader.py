@@ -14,6 +14,9 @@ def read_and_plot(name, K):
     list_measured_distance = []
     list_yaw = []
     list_time = []
+    list_VcP = []
+    list_VcI = []
+    list_VcD = []
 
     "------ Reading of the doc ------"
 
@@ -48,8 +51,26 @@ def read_and_plot(name, K):
     
     data = doc.readline()
     
-    while data != "":
+    while data != "Vcp \n":
         list_yaw.append(float(data[:-1]))
+        data = doc.readline()
+
+    data = doc.readline()
+
+    while data != "Vci \n":
+        list_VcP.append(float(data[:-1]))
+        data = doc.readline()
+
+    data = doc.readline()
+
+    while data != "Vcd \n":
+        list_VcI.append(float(data[:-1]))
+        data = doc.readline()
+
+    data = doc.readline()
+
+    while data != "end":
+        list_VcD.append(float(data[:-1]))
         data = doc.readline()
 
     doc.close()
@@ -80,4 +101,8 @@ def read_and_plot(name, K):
     """
     plt.title(title)
     plt.show()
+
+name = 'C:/Users/User/Documents/5 - ENPC S4/DRONE2022/Logs/IRL 12.05.2022/log1644921107.59.txt'
+read_and_plot(name, 0.005)
+
 
