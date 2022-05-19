@@ -11,7 +11,7 @@ from wall import WallObstacle
 from inspection_drone import InspectionDrone
 
 
-simulation = True
+simulation = False
 
 parser = argparse.ArgumentParser(description='commands')
 parser.add_argument('--connect')
@@ -53,9 +53,9 @@ while drone.mission_running():
             drone.update_detection(use_lidar=True, debug=True, walls=walls)  # distance measure
             drone.update_side_detection(debug=True, walls=walls)
         else:
-            drone.update_detection(use_lidar=True, debug=False)  # distance measure
-            drone.update_side_detection(use_lidar=True, debug=False)
-    if drone.obstacle_detected() and drone.is_in_auto_mode() and not simulation:
+            drone.update_detection(use_lidar=True, debug=True)  # distance measure
+            drone.update_side_detection(use_lidar=True, debug=True)
+    if drone.obstacle_detected() and drone.is_in_auto_mode():
         drone.set_guided_mode()
         drone.send_mavlink_stay_stationary()
     if drone.obstacle_detected() and first_detection and simulation:
@@ -70,14 +70,14 @@ while drone.mission_running():
         elif drone.lidar.go_right:
             drone.send_mavlink_go_right(0.5)
     if not drone.obstacle_detected() and drone.is_in_guided_mode()\
-            and drone.time_since_last_obstacle_detected()>2 and not simulation:
+            and drone.time_since_last_obstacle_detected() > 3 and not simulation:
         drone.set_auto_mode()
         drone.lidar.update_path(drone.obstacle_detected())
     if not drone.obstacle_detected() and drone.is_in_guided_mode() \
-            and drone.time_since_last_obstacle_detected() > 2 and simulation:
+            and drone.time_since_last_obstacle_detected() > 3 and simulation:
         first_detection = True
         drone.lidar.update_path(drone.obstacle_detected())
-    if not drone.obstacle_detected() and first_detection:
+    if not drone.obstacle_detected() and simulation and first_detection:
         drone.send_mavlink_go_forward(0.5)
     if drone.time_since_last_obstacle_detected() > 60:
         drone.abort_mission()
