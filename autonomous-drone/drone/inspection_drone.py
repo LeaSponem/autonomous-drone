@@ -22,7 +22,8 @@ class InspectionDrone(object):
         - baudrate: rate of information transmission
         - two_way_switches: list of two way switches on the RC Transmitter
         - three_way_switches: list of three way switches on the RC Transmitter
-        - lidar_address: I2C address
+        - lidar_address: list of I2C addresses
+        - lidar_angle: list of angles between the drone and the lidar axis
         - critical_distance_lidar: distance of obstacle detection
         """
         # Connection RaspberryPi/Pixhawk
@@ -80,6 +81,7 @@ class InspectionDrone(object):
         self._rotation_angle = 0
         self._yaw_before_rotation = 0
         self._yaw = 0
+        # Initialize sensors
         self.lidar = ThreeLidarSensorsDetection(lidar_address, lidar_angle, critical_distance_lidar)
 
     def update_switch_states(self):
@@ -118,18 +120,21 @@ class InspectionDrone(object):
 
     def update_side_detection(self, use_lidar=True, debug=False):
         """
-        Read the distance returned by the sensor and return if an obstacle is detected
+        Read the distance returned by right and left sensors and check if an obstacle is detected
         """
+        # Detection from a left lidar
         if use_lidar and self.lidar.get_left_lidar() is not None:
+            # Debug mode: read and print distance from sensor
             if self.lidar.read_left_distance() and debug:
                 print("Left lidar range:" + str(self.lidar.get_left_lidar().get_distance()))
             if self.lidar.get_left_lidar().critical_distance_reached():
                 self.lidar._obstacle_detected_left = True
             else:
                 self.lidar._obstacle_detected_left = False
-
+        # Detection from a right lidar
         if use_lidar and self.lidar.get_right_lidar() is not None:
-            if self.lidar.get_right_lidar() is not None and self.lidar.read_right_distance() and debug:
+            # Debug mode: read and print distance from sensor
+            if self.lidar.read_right_distance() and debug:
                 print("Right lidar range:" + str(self.lidar.get_right_lidar().get_distance()))
             if self.lidar.get_right_lidar().critical_distance_reached():
                 self.lidar._obstacle_detected_right = True
@@ -153,6 +158,10 @@ class InspectionDrone(object):
         return self._obstacle_detected
 
     def update_time(self):
+        """
+        Update the time since the drone was connected
+        Update the time since the mission started
+        """
         self._elapsed_time_connexion = time.time() - self._start_time
         if self._mission_running:
             self._elapsed_time_mission = time.time() - self._mission_start_time
@@ -336,12 +345,20 @@ class InspectionDrone(object):
     def time_since_mission_launch(self):
         return self._elapsed_time_mission
 
+    # Functions to access the drone parameters
     def get_distance(self):
+        """
+        Return the last distance read
+        """
         return self.lidar.get_distance()
 
     def get_velocity(self):
         return self.vehicle.velocity
 
     def get_yaw(self):
+        """
+        Return the yaw of the drone in radians
+        Angle between the North and the front of the drone
+        """
         return self._yaw
       
