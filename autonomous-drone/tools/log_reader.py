@@ -4,7 +4,7 @@ This code is to plot the logs produced by the code "test_stop_auto" in IRL Mode
 
 import matplotlib.pyplot as plt
 
-def read_and_plot(name, K):
+def read_and_plot(name, Kp, Ki, Kd):
     
     target_distance = 200      #The drone must stop at this distance from the obstacle
 
@@ -45,14 +45,8 @@ def read_and_plot(name, K):
     
     data = doc.readline()
 
-    while data != "yaw \n":
-        list_measured_distance.append(float(data[:-1]))
-        data = doc.readline()
-    
-    data = doc.readline()
-    
     while data != "Vcp \n":
-        list_yaw.append(float(data[:-1]))
+        list_measured_distance.append(float(data[:-1]))
         data = doc.readline()
 
     data = doc.readline()
@@ -78,7 +72,7 @@ def read_and_plot(name, K):
     "------ Plotting the lists ------"
 
     fig, axes = plt.subplots(nrows=1, ncols=2)
-    title = "K=" + str(K)
+    title = "Kp=" + str(Kp) + ", Ki=" + str(Ki) + ', Kd=' + str(Kd)
 
     axes[0].plot(list_time,list_V_command, label="Ordered")
     axes[0].plot(list_time,list_V_measured, label="Measured")
@@ -102,7 +96,17 @@ def read_and_plot(name, K):
     plt.title(title)
     plt.show()
 
-name = 'C:/Users/User/Documents/5 - ENPC S4/DRONE2022/Logs/IRL 12.05.2022/log1644921107.59.txt'
-read_and_plot(name, 0.005)
+    plt.plot(list_time, list_V_command, label='Command')
+    plt.plot(list_time, list_VcP, label='Kp=' + str(Kp))
+    plt.plot(list_time, list_VcI, label='Ki=' + str(Ki))
+    plt.plot(list_time, list_VcD, label='Kd=' + str(Kd))
+    plt.title('Influence des correcteurs du PID')
+    plt.legend()
+    plt.axes()
+    plt.show()
+
+#name = 'C:/Users/User/Documents/5 - ENPC S4/DRONE2022/autonomous_drone/autonomous_drone/tests/log1644920821.71.txt'
+name = 'log1644920821.71.txt'
+read_and_plot(name, 0.005, 0, 0)
 
 
