@@ -58,7 +58,7 @@ while drone.mission_running():
     if drone.obstacle_detected() and drone.is_in_auto_mode():
         drone.set_guided_mode()
         drone.send_mavlink_stay_stationary()
-    if drone.obstacle_detected() and first_detection and simulation:
+    if drone.obstacle_detected() and simulation and first_detection:
         print("Obstacle detected")
         drone.set_guided_mode()
         drone.send_mavlink_stay_stationary()
