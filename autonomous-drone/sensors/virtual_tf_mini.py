@@ -26,26 +26,26 @@ class VirtualTFMiniPlus(RangeSensor):
         self._time_between_readings = 0.02
         self._distance_detection = distance_detection
 
-    def read_distance(self, x_drone=0, y_drone=0, angle_drone=0, walls=None):
+    def read_distance(self, x_drone=0, y_drone=0, angle_sensor=0, walls=None):
         """
         Read artificially the distance between the drone and the obstacles
         Inputs :
         - x_drone, y_drone: virtual drone coordinates (in cm)
-        - angle_drone: angle between the lidar direction and the X axis (in degrees)
+        - angle_sensor: angle between the lidar direction and the X axis (in degrees)
         - walls: list of wall obstacles
         Return True if an obstacle is within the sensor range, False otherwise
         Update the distance value to the min distance from an obstacle or to 0 otherwise
         """
         if walls is not None:
-            angle_drone = (np.pi/180)*angle_drone
+            angle_sensor = (np.pi/180)*angle_sensor
             distance = self._distance_detection + 1
             for wall in walls:
-                # Check that the drone and the obstacle are not parallel
-                if np.abs(wall.angle - angle_drone) > 0.5:
-                    x_i, y_i = wall.intersection(x_drone, y_drone, angle_drone)
+                # Check that the sensor axis and the obstacle are not parallel
+                if np.abs(wall.angle - angle_sensor) > 0.5:
+                    x_i, y_i = wall.intersection(x_drone, y_drone, angle_sensor)
                     # Only keep the obstacles in front of the drone direction
-                    x_max, y_max = self._get_max_range_coordinates(x_drone, y_drone, angle_drone)
-                    if wall.check_obstacle_orientation(x_drone, y_drone, angle_drone, x_max, y_max)\
+                    x_max, y_max = self._get_max_range_coordinates(x_drone, y_drone, angle_sensor)
+                    if wall.check_obstacle_orientation(x_drone, y_drone, angle_sensor, x_max, y_max)\
                             and wall.check_obstacle_dimension(x_i, y_i):
                         # Only keep the obstacle with the minimum distance from the drone
                         if np.sqrt((x_i - x_drone) ** 2 + (y_i - y_drone) ** 2) < distance:
@@ -57,12 +57,12 @@ class VirtualTFMiniPlus(RangeSensor):
             self.set_distance(0)
             return False
 
-    def _get_max_range_coordinates(self, x_drone, y_drone, angle_drone):
+    def _get_max_range_coordinates(self, x_drone, y_drone, angle_sensor):
         """
-        Compute the coordinates of the max range point in the drone current direction
+        Compute the coordinates of the max range point in the sensor current direction
         """
-        x_max_range = x_drone + self._distance_detection * np.cos(angle_drone)
-        y_max_range = y_drone + self._distance_detection * np.sin(angle_drone)
+        x_max_range = x_drone + self._distance_detection * np.cos(angle_sensor)
+        y_max_range = y_drone + self._distance_detection * np.sin(angle_sensor)
         return x_max_range, y_max_range
 
     def lidar_reading(self):
