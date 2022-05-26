@@ -2,7 +2,10 @@ import numpy as np
 import time
 
 
-class FrameConverter:
+class FrameConverter(object):
+    """
+    Class FrameConverter used to convert GPS coordinates two distances from a reference point along two axis
+    """
     def __init__(self, ref_latitude):
         self._ref_lat = ref_latitude
 
@@ -53,13 +56,20 @@ class FrameConverter:
         return int(radians * 180 / np.pi)
 
 
-class SimulationPosition:
+class SimulationPosition(object):
+    """
+    Class SimulationPosition, for simulator use only
+    Used to init a frame converter and update the drone virtual position
+    The virtual position is given in a cartesian frame with an origin on the initial drone position
+    """
     def __init__(self, ref_lat, ref_long, angle_north_x_axes):
         self._time_last_update_position = time.time()
+        # Reference latitude and longitude : origin
         self._ref_lat = ref_lat
         self._ref_long = ref_long
         self._angle_north_x_axes = angle_north_x_axes
         self._newPosition = False
+        # Initialize the frame converter
         self._frame_converter = FrameConverter(self._ref_lat)
 
     def get_position(self, drone_location):
@@ -68,13 +78,11 @@ class SimulationPosition:
         positioning system
         Returns positions x and y in m
         """
-
         delta_lat = drone_location.lat - self._ref_lat
         delta_long = drone_location.lon - self._ref_long
         x_north, y_east = self._frame_converter.convert_global_to_metric(delta_lat, delta_long)
         x = x_north * np.cos(self._angle_north_x_axes * np.pi / 180) + y_east * np.sin(self._angle_north_x_axes * np.pi / 180)
         y = x_north * np.sin(self._angle_north_x_axes * np.pi / 180) - y_east * np.cos(self._angle_north_x_axes * np.pi / 180)
-
         return 0.001*int(x), 0.001*int(y)
 
     def update_position(self):
