@@ -12,12 +12,14 @@ class VirtualDrone(InspectionDrone):
     Specific class for a virtual drone used on a simulator
     Deprecated class from InspectionDrone with parameters and methods for virtual positions
     """
-    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches, lidar_angle, critical_distance_lidar=100):
-        InspectionDrone.__init__(self, connection_string, baudrate, two_way_switches,
-                                 three_way_switches, lidar_angle=lidar_angle, critical_distance_lidar=critical_distance_lidar)
+    def __init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
+                 lidar_angle, critical_distance_lidar=100):
+        InspectionDrone.__init__(self, connection_string, baudrate, two_way_switches, three_way_switches,
+                                 lidar_angle=lidar_angle, critical_distance_lidar=critical_distance_lidar)
+        # Drone virtual coordinates
         self._drone_x = 0
         self._drone_y = 0
-        # GPS coordinates
+        # Drone GPS coordinates
         self._location = self.vehicle.location.global_relative_frame
         # Initial angle between X axis and the North
         self._update_yaw()
@@ -36,7 +38,7 @@ class VirtualDrone(InspectionDrone):
 
     def _update_location(self):
         """
-        Update the GPS coordinates of the drone
+        Update the drone GPS coordinates
         Return (latitude, longitude, altitude)
         """
         self._location = self.vehicle.location.global_relative_frame
@@ -73,6 +75,7 @@ class VirtualDrone(InspectionDrone):
     def update_detection(self, use_lidar=True, debug=False, walls=None):
         """
         Read the distance returned by the sensor and return if an obstacle is detected
+        The distance is read relatively to the input list of obstacles
         """
         self._update_virtual_position()
         if self.lidar.read_distance(self._drone_x, self._drone_y, self.get_angle(), walls) and debug:
@@ -86,7 +89,8 @@ class VirtualDrone(InspectionDrone):
 
     def update_side_detection(self, debug=False, walls=None):
         """
-        Read the distance returned by the sensor and return if an obstacle is detected
+        Read the distance returned by right and left sensors and check if an obstacle is detected
+        The distance is read relatively to the input list of obstacles
         """
         self._update_virtual_position()
         if self.lidar.get_left_lidar() is not None:
@@ -98,7 +102,7 @@ class VirtualDrone(InspectionDrone):
                 self.lidar._obstacle_detected_left = False
 
         if self.lidar.get_right_lidar() is not None:
-            if self.lidar.get_right_lidar() is not None and self.lidar.read_right_distance(self._drone_x, self._drone_y, self.get_sensor_angle(90), walls) and debug:
+            if self.lidar.read_right_distance(self._drone_x, self._drone_y, self.get_sensor_angle(90), walls) and debug:
                 print("Right lidar range:" + str(self.lidar.get_right_lidar().get_distance()))
             if self.lidar.get_right_lidar().critical_distance_reached():
                 self.lidar._obstacle_detected_right = True
