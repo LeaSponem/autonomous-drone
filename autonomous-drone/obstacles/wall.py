@@ -19,10 +19,16 @@ class WallObstacle(Obstacle):
         return self._x_origin, self._y_origin
 
     def _get_obstacle_coordinates(self):
+        """
+        Return the obstacle extremity coordinates
+        """
         x_0, y_0 = self._get_obstacle_origin()
         return x_0 + self._dimension * np.cos((np.pi/180)*self.angle), y_0 + self._dimension * np.sin((np.pi/180)*self.angle)
 
     def _get_center_coordinates(self):
+        """
+        Return the obstacle center coordinates
+        """
         x_0, y_0 = self._get_obstacle_origin()
         x_f, y_f = self._get_obstacle_coordinates()
         return (x_0+x_f)/2, (y_0+y_f)/2
@@ -36,15 +42,15 @@ class WallObstacle(Obstacle):
         b = y_0 - a*x_0
         return a, b
 
-    def intersection(self, x_drone, y_drone, angle_drone):
+    def intersection(self, x_drone, y_drone, angle_sensor):
         """
-        Compute and return the coordinates of intersection between the drone axis and the wall
+        Compute and return the coordinates of intersection between the sensor axis and the wall
         """
         a_wall, b_wall = self._obstacle_equation()
-        a_drone = np.sin(angle_drone)
-        b_drone = y_drone - x_drone*np.sin(angle_drone)
-        # Drone perpendicular to the X axis
-        if np.abs(angle_drone - 90) < 0.5 or np.abs(angle_drone - 270) < 0.5:
+        a_drone = np.sin(angle_sensor)
+        b_drone = y_drone - x_drone*np.sin(angle_sensor)
+        # Sensor axis perpendicular to the X axis
+        if np.abs(angle_sensor - 90) < 0.5 or np.abs(angle_sensor - 270) < 0.5:
             x_intersection = x_drone
             y_intersection = a_wall*x_drone + b_wall
         # Obstacle perpendicular to the X axis
@@ -56,12 +62,12 @@ class WallObstacle(Obstacle):
             y_intersection = a_wall*x_intersection+b_wall
         return x_intersection, y_intersection
 
-    def check_obstacle_orientation(self, x_drone, y_drone, angle_drone, x_max_range, y_max_range):
+    def check_obstacle_orientation(self, x_drone, y_drone, angle_sensor, x_max_range, y_max_range):
         """
         Check if the distance is measured in front of the drone
         Return True if the intersection point is in front of the drone, False otherwise
         """
-        x_intersection, y_intersection = self.intersection(x_drone, y_drone, angle_drone)
+        x_intersection, y_intersection = self.intersection(x_drone, y_drone, angle_sensor)
         drone_vector = np.array([x_max_range-x_drone, y_max_range-y_drone])
         obstacle_vector = np.array([x_intersection-x_drone, y_intersection-y_drone])
         if np.dot(drone_vector, obstacle_vector) > 0:
@@ -69,6 +75,9 @@ class WallObstacle(Obstacle):
         return False
 
     def check_obstacle_dimension(self, x_intersection, y_intersection):
+        """
+        Check that the wall is long enough to intersect the sensor axis
+        """
         x_center, y_center = self._get_center_coordinates()
         distance = np.sqrt((x_intersection-x_center)**2 + (y_intersection-y_center)**2)
         if distance < self._dimension/2:
