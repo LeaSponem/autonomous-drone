@@ -25,13 +25,15 @@ time_length_simu = 30     #Length of the simulation in second
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8],
                      three_way_switches=[5, 6, 8, 9, 10, 11, 12],
+                     lidar_angle=[0],
                      critical_distance_lidar=3)             #Make sure the distance is the same (but in meters) as the target_distance
 
 """
 drone = InspectionDrone('/dev/serial0', baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                        lidar_address=0x10, critical_distance_lidar=target_distance)
+                        lidar_address=[0x10], lidar_angle=[0],
+                        critical_distance_lidar=target_distance)
 """
 
 drone.arm_and_takeoff(2)

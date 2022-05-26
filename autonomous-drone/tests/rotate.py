@@ -10,7 +10,8 @@ drone = InspectionDrone('/dev/serial0',
                         baudrate=115200,
                         two_way_switches=[7, 8],
                         three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                        lidar_address=0x10, critical_distance_lidar=400)
+                        lidar_address=[0x10], lidar_angle=[0],
+                        critical_distance_lidar=400)
 
 drone.launch_mission()
 spining = True

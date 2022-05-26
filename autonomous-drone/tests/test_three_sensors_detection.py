@@ -29,7 +29,7 @@ if simulation:
 else:
     drone = InspectionDrone(connection_string, baudrate=115200,
                             two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                            lidar_angle=[0, 90, -90], lidar_address=[],
+                            lidar_angle=[0, 90, -90], lidar_address=[0x10, 0x12, 0x11],
                             critical_distance_lidar=100)
 
 wall1 = WallObstacle(-10, 10, 20, 0)

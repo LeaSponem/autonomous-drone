@@ -17,7 +17,7 @@ connection_string = args.connect
 
 drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
-                     critical_distance_lidar=100)
+                     lidar_angle=[0], critical_distance_lidar=100)
 
 wall1 = WallObstacle(-1000, 1000, 2000, 0)
 wall2 = WallObstacle(-1000, 1100, 2000, 0)
