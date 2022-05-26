@@ -1,20 +1,18 @@
 import smbus2
 from range_sensors import RangeSensor
-import time
 
-DEFAULT_CRITICAL_DISTANCE = 50
+DEFAULT_CRITICAL_DISTANCE = 100
 
 
 class TFMiniPlus(RangeSensor):
     """Class for a specific range sensor : the TFMini Plus"""
-
     def __init__(self, address, angle=0, critical_distance=DEFAULT_CRITICAL_DISTANCE):
         """Constructor : can take as input the critical distance of the sensor under which we detect an obstacle"""
         RangeSensor.__init__(self, critical_distance)  # Calls the constructor of the parent class
         self._name = "Lidar"
-        self.angle = angle
+        self.angle = angle  # Angle between the drone front axis and the lidar axis
         self._address = address
-        self._time_between_readings = 0.02  # ask a reading every 20 ms
+        self._time_between_readings = 0.02  # Ask a reading every 20 ms
 
     def read_distance(self):
         """Read the distance return by the TFMiniPlus"""
@@ -34,4 +32,7 @@ class TFMiniPlus(RangeSensor):
         return False
         
     def lidar_reading(self):
+        """
+        Check if the time since the last reading is superior to the fixed time between two readings
+        """
         return self.time_since_last_reading() > self._time_between_readings
