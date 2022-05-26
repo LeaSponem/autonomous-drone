@@ -26,12 +26,19 @@ class VirtualDroneLidarSensors(object):
 
 
 class VirtualThreeLidarSensorsDetection(ThreeLidarSensorsDetection):
-    def __init__(self, lidar_angle, critical_distance_lidar=1):
+    """
+    Deprecated class from ThreeLidarSensorsDetection
+    Used on the simulator to detect obstacle with three lidar sensors
+    """
+    def __init__(self, lidar_angle, critical_distance_lidar=100):
+        # Call parent class constructor
         ThreeLidarSensorsDetection.__init__(self, lidar_angle=lidar_angle,
                                             critical_distance_lidar=critical_distance_lidar)
+        # Init virtual sensors
         self._lidar_sensors = VirtualDroneLidarSensors(lidar_angle, critical_distance_lidar).lidar_sensors
         self._sort_sensors()
 
+    # Redefinition of distance functions, using virtual sensors and obstacles
     def read_distance(self, drone_x, drone_y, angle, walls):
         return self._front_lidar.read_distance(drone_x, drone_y, angle, walls)
 
