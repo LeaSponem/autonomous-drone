@@ -1,7 +1,7 @@
 import time
 
 # -------- Parent range sensor class ---------
-DEFAULT_CRITICAL_DISTANCE = 1
+DEFAULT_CRITICAL_DISTANCE = 100
 
 
 class RangeSensor(object):
@@ -10,7 +10,6 @@ class RangeSensor(object):
     It cannot read data because this function is specific to each sensors.
     Thus this class cannot be used by itself but is very useful for the lidar and sonar child classes
     """
-
     def __init__(self, critical_distance=DEFAULT_CRITICAL_DISTANCE):
         self.name = "Range sensor"
         self._range = 999  # range : last distance read by sensor
