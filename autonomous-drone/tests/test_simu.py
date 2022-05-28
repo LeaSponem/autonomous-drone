@@ -1,3 +1,7 @@
+"""
+Test the simulator classes
+Test obstacle detection with one lidar sensor in front of the drone
+"""
 # dronekit-sitl copter-3.3 --home=48.8411292,2.5879308,584,353
 # mavproxy.exe --master tcp:127.0.0.1:5760 --out udp:127.0.0.1:14550 --out udp:127.0.0.1:14551
 # python test_simu.py --connect udp:127.0.0.1:14551
@@ -19,6 +23,7 @@ drone = VirtualDrone(connection_string, baudrate=115200,
                      two_way_switches=[7, 8], three_way_switches=[5, 6, 8, 9, 10, 11, 12],
                      lidar_angle=[0], critical_distance_lidar=100)
 
+# Init obstacles
 wall1 = WallObstacle(-1000, 1000, 2000, 0)
 wall2 = WallObstacle(-1000, 1100, 2000, 0)
 wall3 = WallObstacle(-1000, 1200, 2000, 90)

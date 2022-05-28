@@ -1,3 +1,7 @@
+"""
+Test sending the drone yaw command
+The drone spins when the switch_spin is down
+"""
 import sys
 import time
 sys.path.insert(0, '../drone')

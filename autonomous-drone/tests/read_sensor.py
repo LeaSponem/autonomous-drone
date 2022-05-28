@@ -1,3 +1,8 @@
+"""
+Test obstacle detection with one front lidar sensor
+The drone follows a mission or is piloted
+When and obstacle is detected the drone stops
+"""
 import sys
 import time
 sys.path.insert(0, '../drone')

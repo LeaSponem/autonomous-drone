@@ -1,3 +1,7 @@
+"""
+Test sending MAVLink messages to the drone
+When the mode is set to GUIDED, the drone moves forward for 10 s then backward for 10 s
+"""
 import sys
 import time
 sys.path.insert(0, '../drone')
@@ -15,14 +19,14 @@ drone.launch_mission()
 while drone.mission_running():
     drone.update_time()
     drone.update_switch_states()
-    if drone.is_in_guided_mode():
-        print("Going North for 10 s at 0.1 m/s")
-        for _ in range(10):
+    if drone.is_in_guided_mode():  # set guided mode
+        print("Going forward for 10 s at 0.1 m/s")
+        for _ in range(10):  # drone goes forward for 10 s
             drone.send_mavlink_go_forward(0.1)
             time.sleep(1)
         drone.set_flight_mode("GUIDED")
-        print("Going South for 10 s at 0.1 m/s")
-        for _ in range(10):
+        print("Going backward for 10 s at 0.1 m/s")
+        for _ in range(10):  # drone goes backward for 10 s
             drone.send_mavlink_go_backward(0.1)
             time.sleep(1)
         drone.set_flight_mode(last_flight_mode)

@@ -1,3 +1,7 @@
+"""
+Test obstacles detection with three lidar sensors on the drone
+Version for simulator (simulation = True) and reality (simulation = False)
+"""
 # dronekit-sitl copter-3.3 --home=48.8411292,2.5879308,584,353
 # mavproxy.exe --master tcp:127.0.0.1:5760 --out udp:127.0.0.1:14550 --out udp:127.0.0.1:14551
 # python test_three_sensors_detection.py --connect udp:127.0.0.1:14551
@@ -32,6 +36,7 @@ else:
                             lidar_angle=[0, 90, -90], lidar_address=[0x10, 0x12, 0x11],
                             critical_distance_lidar=100)
 
+# Init obstacles
 wall1 = WallObstacle(-10, 10, 20, 0)
 wall2 = WallObstacle(-2, 5, 20, 90)
 wall3 = WallObstacle(-1000, 1200, 2000, 90)
